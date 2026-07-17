@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+ <head>
+    <meta charset="utf-8" />
+    <title>Pratham Gosai - IT &amp; Network Engineer, AI Automation</title>
+    <!--
+      SOURCE OF TRUTH for the resume PDF at public/Pratham-Gosai-Resume.pdf.
+      Regenerate after editing (from the portfolio/ directory):
+
+        msedge --headless=new --disable-gpu --no-pdf-header-footer \
+          --print-to-pdf="public/Pratham-Gosai-Resume.pdf" "resume/resume.html"
+
+      ATS constraints this file deliberately honours:
+        - Single column. No tables, text boxes, or floats for layout.
+        - No images, icons, or background colours. Black text on white.
+        - Standard headings (Summary / Experience / Projects / Skills /
+          Education / Certifications) that parsers recognise.
+        - A common font (Arial) so glyphs map to real characters on extraction.
+        - Links written as plain visible text - many parsers drop <a href>.
+        - No page headers/footers; parsers often mangle them.
+        - A4 (the international default). Swap to Letter for US-only use.
+    -->
+    <style>
+      @page {
+        size: A4;
+        margin: 13mm 14mm;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        line-height: 1.34;
+        color: #000;
+        background: #fff;
+      }
+
+      h1 {
+        font-size: 19pt;
+        letter-spacing: 0.3pt;
+      }
+
+      .title {
+        font-size: 10.5pt;
+        font-weight: bold;
+        margin-top: 2pt;
+      }
+
+      .contact {
+        font-size: 9pt;
+        margin-top: 4pt;
+      }
+
+      h2 {
+        font-size: 10.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.6pt;
+        border-bottom: 1pt solid #000;
+        padding-bottom: 2pt;
+        margin-top: 12pt;
+        margin-bottom: 6pt;
+      }
+
+      h3 {
+        font-size: 10.5pt;
+      }
+
+      .meta {
+        font-size: 9.5pt;
+        font-style: italic;
+      }
+
+      .role {
+        margin-top: 8pt;
+      }
+
+      .role:first-of-type {
+        margin-top: 0;
+      }
+
+      ul {
+        margin: 3pt 0 0 15pt;
+      }
+
+      li {
+        margin-bottom: 1.5pt;
+      }
+
+      p {
+        margin-top: 3pt;
+      }
+
+      .tech {
+        margin-top: 3pt;
+      }
+
+      .cert-group {
+        margin-top: 6pt;
+      }
+
+      .cert-group:first-of-type {
+        margin-top: 0;
+      }
+
+      /* Keep a block from being split across a page break. */
+      .keep {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    </style>
+ </head>
+ <body>
+    <header>
+      <h1>PRATHAM GOSAI</h1>
+      <div class="title">IT &amp; Network Engineer | AI Automation | Full-Stack Developer</div>
+      <div class="contact">
+        Surat, Gujarat, India &nbsp;|&nbsp; prathamgosai2004@gmail.com<br />
+        linkedin.com/in/pratham-gosai-066789312 &nbsp;|&nbsp; github.com/prathamgosai
+      </div>
+    </header>
+
+    <h2>Summary</h2>
+    <p>
+      IT and network engineer who also builds the software layer. Over 10 months of hands-on L1/L2 desktop and
+      network support across Windows systems, LAN/WAN infrastructure, firewalls, and NAS storage, combined with
+      production full-stack delivery: designed and built WorkforceIQ, a workforce management platform covering 370+
+      staff for a multi-brand restaurant group. Currently automating live hotel operations using the Claude API.
+      Anthropic-certified in Claude API development and AI Fluency. Open to on-site, hybrid, or remote roles.
+    </p>
+
+    <h2>Experience</h2>
+
+    <div class="role keep">
+      <h3>AI Automation / Reservationist</h3>
+      <div class="meta">K. Girdharlal International Ltd. / Bookends Hospitality - Surat, India | Jun 2026 - Present</div>
+      <ul>
+        <li>Automated repetitive reservation and administrative tasks using AI workflows built on the Claude API.</li>
+        <li>Improved customer response times by introducing AI-based workflows into daily operations.</li>
+        <li>Managed website content and booking updates.</li>
+        <li>Coordinated with hotel and operations teams and maintained accurate customer records.</li>
+        <li>Designed and built WorkforceIQ, the group's restaurant workforce platform, covering 370+ staff.</li>
+      </ul>
+    </div>
+
+    <div class="role keep">
+      <h3>Desktop Engineer &amp; Network Engineer</h3>
+      <div class="meta">Premware Services India LLP - Surat, India | Sep 2025 - Present</div>
+      <ul>
+        <li>Provide L1/L2 desktop and network support for end users.</li>
+        <li>Install, configure, and maintain Windows desktops, laptops, printers, and peripherals.</li>
+        <li>Diagnose hardware, software, and network connectivity issues.</li>
+        <li>Manage user accounts, system configurations, and software installations.</li>
+        <li>Support LAN/WAN infrastructure and basic network security.</li>
+        <li>Perform preventive maintenance and system updates, and document incidents for reuse.</li>
+      </ul>
+    </div>
+
+    <h2>Projects</h2>
+
+    <div class="keep">
+      <h3>WorkforceIQ - Workforce Management Platform</h3>
+      <div class="meta">Jun - Jul 2026 | github.com/prathamgosai/staff-management</div>
+      <p>
+        Full-stack platform covering the complete employee lifecycle - directory, scheduling, attendance, leave,
+        allocation, and forecasting - for 370+ staff across a multi-brand, multi-outlet restaurant group.
+      </p>
+      <ul>
+        <li>
+          Built an auto-scheduling engine that generates weekly rosters from 3 rotating shift templates across 7
+          days, with per-staff manual overrides that persist through future rotations.
+        </li>
+        <li>Implemented database-backed, live-editable role-based access control (RBAC) across 6 account types.</li>
+        <li>Delivered attendance, leave, allocation, and performance dashboard modules.</li>
+        <li>Integrated WhatsApp notifications via the Meta Graph API, alongside email notifications.</li>
+        <li>Built a Python/FastAPI microservice for machine-learning staffing demand forecasting.</li>
+        <li>
+          Hardened authentication with single-use SHA-256-hashed refresh-token rotation, rate limiting, and a forced
+          password-change flow.
+        </li>
+        <li>Imported and cleaned real employee data through numbered, reversible SQL migrations with audit trails.</li>
+        <li>
+          Architected a pnpm + Turborepo monorepo: NestJS API using raw parameterized SQL on PostgreSQL 16, Next.js
+          14 + React 18 frontend, shared TypeScript package, and Redis job queues. Deployed to production on Render
+          with Supabase-hosted PostgreSQL.
+        </li>
+      </ul>
+      <div class="tech">
+        <strong>Technologies:</strong> TypeScript, Next.js, React, NestJS, Node.js, PostgreSQL, Redis, Python,
+        FastAPI, Tailwind CSS, TanStack Query, Turborepo
+      </div>
+    </div>
+
+    <h2>Skills</h2>
+    <p>
+      <strong>Infrastructure &amp; Networking:</strong> Desktop support (L1/L2), Windows administration, LAN/WAN,
+      network troubleshooting, NAS storage
+    </p>
+    <p>
+      <strong>Security:</strong> Cisco firewall basics, system and network security, ethical hacking fundamentals,
+      authentication hardening (token rotation, rate limiting)
+    </p>
+    <p>
+      <strong>AI &amp; Automation:</strong> Claude API, prompt design, workflow automation, machine-learning demand
+      forecasting (FastAPI)
+    </p>
+    <p>
+      <strong>Full-Stack:</strong> TypeScript, Next.js, React, NestJS, Node.js, PostgreSQL, Redis, Tailwind CSS,
+      TanStack Query, Turborepo
+    </p>
+    <p>
+      <strong>Practices:</strong> Technical documentation, incident handling, reversible SQL migrations, monorepo
+      tooling
+    </p>
+
+    <h2>Education</h2>
+    <div class="keep">
+      <h3>B.Sc. Information Technology (Infrastructure Management Services)</h3>
+      <div class="meta">Bhagwan Mahavir University - Surat, India</div>
+    </div>
+    <div class="keep" style="margin-top: 6pt">
+      <h3>Cloud Computing &amp; Cybersecurity Track</h3>
+      <div class="meta">PureSkill IT Training Academy - Surat, India</div>
+      <p>Cisco Firewall Security; Ethical Hacking.</p>
+    </div>
+
+    <h2>Certifications</h2>
+
+    <div class="cert-group keep">
+      <strong>Anthropic</strong>
+      <ul>
+        <li>Claude with the Anthropic API - Mar 2026 (Credential ID: ayzsae3o38ec)</li>
+        <li>AI Fluency: Framework &amp; Foundations - Mar 2026 (Credential ID: e6ub7n6v2w95)</li>
+        <li>Claude 101</li>
+      </ul>
+    </div>
+
+    <div class="cert-group keep">
+      <strong>Cisco Networking Academy</strong>
+      <ul>
+        <li>Networking Basics - Aug 2025</li>
+        <li>Introduction to Internet of Things - Jul 2025</li>
+        <li>Introduction to Cybersecurity - Oct 2024</li>
+        <li>Introduction to Data Science - Oct 2024</li>
+        <li>Computer Hardware Basics - Oct 2024</li>
+      </ul>
+    </div>
+
+    <div class="cert-group keep">
+      <strong>Microsoft</strong>
+      <ul>
+        <li>
+          Design security solutions that align with the Cloud Adoption Framework (CAF) and Well-Architected
+          Framework (WAF) - Feb 2026
+        </li>
+        <li>Introduction to Zero Trust and best practice frameworks - Feb 2026</li>
+        <li>Manage Microsoft Entra Identity Protection - Feb 2026</li>
+        <li>Introduction to GitHub Advanced Security - Feb 2026</li>
+      </ul>
+    </div>
+
+    <div class="cert-group keep">
+      <strong>Meta Blueprint</strong>
+      <ul>
+        <li>Technical implementation of the Meta Pixel - Feb 2026</li>
+        <li>Get started with product catalogs on Meta technologies - Feb 2026</li>
+      </ul>
+    </div>
+ </body>
+</html>

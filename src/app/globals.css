@@ -1,26 +1,187 @@
 @import "tailwindcss";
 
+/* next-themes sets class="dark" on <html>; tell Tailwind v4 to use it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/**
+ * Design tokens — "engineering documentation".
+ * Palette is drawn from rack hardware: enclosure blue-black, schematic paper,
+ * amber status LED, patch-cable blue. Amber is never used for body text
+ * (it cannot hit AA on light); it carries the diagram and rules only.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --enclosure: #0f1620;
+  --schematic: #f2f5f7;
+  --signal: #e39a2c;
+  --signal-ink: #8a5410; /* AA-safe amber for text on light surfaces */
+  --cable: #3d6fa8;
+  --slate: #5a6773;
+
+  --bg: var(--schematic);
+  --surface: #ffffff;
+  --fg: var(--enclosure);
+  --fg-muted: #4a5663;
+  --rule: #d5dde4;
+  /* Diagram wires need more weight than a UI rule to stay legible. */
+  --wire: #a9b8c6;
+  --accent: var(--signal);
+  --accent-ink: var(--signal-ink);
+  --link: #2d5b8f;
+}
+
+.dark {
+  --bg: var(--enclosure);
+  --surface: #161f2b;
+  --fg: #eef2f6;
+  --fg-muted: #a3b0bd;
+  --rule: #2a3644;
+  --wire: #46586c;
+  --accent: var(--signal);
+  --accent-ink: #f0b35c; /* AA-safe amber for text on the dark enclosure */
+  --link: #7fb0e8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-cable: var(--cable);
+  --color-link: var(--link);
+
+  --font-sans: var(--font-plex-sans);
+  --font-display: var(--font-plex-condensed);
+  --font-mono: var(--font-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+}
+
+/* next-themes sets .dark on <html> itself. */
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Cable-label eyebrow — the recurring mono motif. */
+.label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Rendered markdown (remark-html output). No typography plugin — tokens only. */
+.post {
+  color: var(--fg-muted);
+  line-height: 1.75;
+}
+.post > * + * {
+  margin-top: 1.25rem;
+}
+.post h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--fg);
+  margin-top: 2.75rem;
+}
+.post h3 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.175rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 2rem;
+}
+.post strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.post a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.post ul,
+.post ol {
+  padding-left: 1.25rem;
+}
+.post ul {
+  list-style: disc;
+}
+.post ol {
+  list-style: decimal;
+}
+.post li + li {
+  margin-top: 0.5rem;
+}
+.post blockquote {
+  border-left: 2px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--fg);
+}
+.post code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+.post pre {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.825rem;
+  line-height: 1.6;
+}
+.post pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Amber pulse travelling the Claude edge of the hero topology. */
+.topology-pulse {
+  stroke-dasharray: 5 9;
+  animation: topology-flow 2.6s linear infinite;
+}
+
+@keyframes topology-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--signal) 35%, transparent);
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
