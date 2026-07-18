@@ -152,21 +152,28 @@ body {
   font-size: inherit;
 }
 
-/* Amber pulse travelling the Claude edge of the hero topology. */
-.topology-pulse {
-  stroke-dasharray: 5 9;
-  animation: topology-flow 2.6s linear infinite;
-}
-
-@keyframes topology-flow {
-  to {
-    stroke-dashoffset: -28;
-  }
-}
-
 ::selection {
   background: color-mix(in srgb, var(--signal) 35%, transparent);
   color: inherit;
+}
+
+/* Google Translate: hide its injected top banner + tooltip and stop it from
+   pushing the page down. We drive translation from our own LanguagePicker. */
+.goog-te-banner-frame,
+.skiptranslate {
+  display: none !important;
+}
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+/* Google wraps translated text in <font> tags — keep them inheriting our type. */
+font {
+  font: inherit !important;
+  vertical-align: inherit !important;
 }
 
 :focus-visible {

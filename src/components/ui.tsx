@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { stats } from "@/data/portfolio";
+import { AnimatedStat } from "@/components/animated-stat";
 
 export function Section({
   label,
@@ -51,7 +52,7 @@ export function StatBar() {
       {stats.map((stat) => (
         <li key={stat.label} className="bg-bg px-5 py-6">
           <span aria-hidden className="block h-0.5 w-6 bg-accent" />
-          <p className="mt-3 font-display text-3xl font-bold tracking-tight text-fg">{stat.value}</p>
+          <AnimatedStat value={stat.value} />
           <p className="mt-1 text-sm leading-snug text-muted">{stat.label}</p>
         </li>
       ))}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Section, ChipRow, ButtonLink } from "@/components/ui";
+import { BreadcrumbJsonLd } from "@/components/breadcrumb-jsonld";
 import { learningInPublic, workforceiq } from "@/data/portfolio";
 
 export const metadata: Metadata = {
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
 export default function ProjectsPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Projects", path: "/projects" },
+        ]}
+      />
       <Section
         label="Projects"
         title="Work I can walk you through in detail."
@@ -58,7 +65,7 @@ export default function ProjectsPage() {
       >
         <ul className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
           {learningInPublic.map((item) => (
-            <li key={item.name} className="bg-bg p-5">
+            <li key={item.name} className="bg-bg p-5 transition-colors hover:bg-surface">
               <p className="label">{item.kind}</p>
               <h3 className="mt-2 font-mono text-sm font-medium text-fg">{item.name}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>

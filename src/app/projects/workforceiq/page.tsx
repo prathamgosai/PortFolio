@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { ChipRow, ButtonLink } from "@/components/ui";
 import { Architecture } from "@/components/architecture";
+import { BreadcrumbJsonLd } from "@/components/breadcrumb-jsonld";
 import { identity, workforceiq } from "@/data/portfolio";
 
 export const metadata: Metadata = {
@@ -26,6 +27,13 @@ function H2({ children }: { children: React.ReactNode }) {
 export default function WorkforceIQPage() {
   return (
     <article className="mx-auto max-w-3xl px-5 py-14">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Projects", path: "/projects" },
+          { name: workforceiq.name, path: `/projects/${workforceiq.slug}` },
+        ]}
+      />
       <Link href="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
         <ArrowLeft className="h-4 w-4" />
         All projects

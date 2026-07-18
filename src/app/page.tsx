@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Section, StatBar, ChipRow, ButtonLink, CTABlock } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
-import { Topology } from "@/components/topology";
+import { FadeIn } from "@/components/fade-in";
 import { PersonJsonLd } from "@/components/person-jsonld";
+import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
 import { experience, hero, identity, whatIDo, workforceiq } from "@/data/portfolio";
 
@@ -13,16 +14,23 @@ export default function HomePage() {
   return (
     <>
       <PersonJsonLd />
+      <FaqJsonLd />
 
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-5 pb-14 pt-14 sm:pt-20">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-          <div>
+        <div className="max-w-2xl">
+          <FadeIn>
             <p className="label">{identity.availability}</p>
+          </FadeIn>
+          <FadeIn delay={0.06}>
             <h1 className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
               {hero.headline}
             </h1>
+          </FadeIn>
+          <FadeIn delay={0.12}>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{hero.sub}</p>
+          </FadeIn>
+          <FadeIn delay={0.18}>
             <div className="mt-7 flex flex-wrap gap-3">
               <ButtonLink href={`/projects/${workforceiq.slug}`}>
                 Read the WorkforceIQ case study
@@ -32,8 +40,7 @@ export default function HomePage() {
                 Contact me
               </ButtonLink>
             </div>
-          </div>
-          <Topology className="hidden lg:block" />
+          </FadeIn>
         </div>
       </section>
 
@@ -44,7 +51,7 @@ export default function HomePage() {
         <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
           {whatIDo.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.05}>
-              <div className="h-full bg-bg p-6">
+              <div className="h-full bg-bg p-6 transition-colors hover:bg-surface">
                 <span aria-hidden className="block h-0.5 w-6 bg-accent" />
                 <h3 className="mt-3 font-display text-lg font-semibold text-fg">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
@@ -57,7 +64,7 @@ export default function HomePage() {
       {/* Featured work */}
       <Section label="Featured work" title="WorkforceIQ">
         <Reveal>
-          <article className="mt-6 rounded border border-rule bg-surface p-6 sm:p-8">
+          <article className="mt-6 rounded border border-rule bg-surface p-6 transition-colors hover:border-accent sm:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <p className="text-muted">{workforceiq.tagline}</p>

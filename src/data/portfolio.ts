@@ -7,11 +7,13 @@
  * consuming component omit the element — never invent a placeholder.
  */
 
-/** TODO: set to the real domain at launch, then update JSON-LD + metadataBase. */
-export const SITE_URL = "https://example.com";
+/** Live domain. Drives metadataBase, canonicals, JSON-LD, sitemap, and robots. */
+export const SITE_URL = "https://prathamgosai.in";
 
 export const identity = {
   name: "Pratham Gosai",
+  /** Full legal name — used for SEO/structured data only; display stays `name`. */
+  fullName: "Pratham Dharmeshbharti Gosai",
   pronouns: "he/him",
   oneLine: "IT & network engineer turned AI-automation and full-stack builder.",
   jobTitle: "IT Support & Network Engineer · AI Automation",

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Menu, Moon, Sun, X } from "lucide-react";
+import { LanguagePicker } from "@/components/language-picker";
 
 const NAV = [
   { href: "/about", label: "About" },
@@ -43,7 +44,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-rule bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3.5">
         <Link href="/" className="font-display text-lg font-bold tracking-tight text-fg">
-          Pratham Gosai
+          Pratham Dharmeshbharti Gosai
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
@@ -65,6 +66,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguagePicker />
           <ThemeToggle />
           <Link
             href="/contact"

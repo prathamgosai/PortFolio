@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, IBM_Plex_Sans_Condensed, IBM_Plex_Mono } from "next/font
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ServiceWorkerCleanup } from "@/components/sw-cleanup";
 import { SITE_URL, identity } from "@/data/portfolio";
 import "./globals.css";
 
@@ -33,6 +34,12 @@ export const metadata: Metadata = {
   description:
     "Desktop & network engineer in Surat, India, building AI-powered systems — shipped WorkforceIQ, a workforce platform for 370+ restaurant staff.",
   keywords: [
+    "Pratham Gosai",
+    "Pratham Dharmeshbharti Gosai",
+    "Pratham Gosai Surat",
+    "Pratham Gosai portfolio",
+    "Pratham Gosai developer",
+    "Pratham Gosai IT engineer",
     "IT support engineer Surat",
     "desktop support engineer",
     "network engineer Gujarat",
@@ -46,6 +53,11 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: identity.name, url: SITE_URL }],
   creator: identity.name,
+  publisher: identity.name,
+  category: "technology",
+  // Paste the token from Google Search Console → Settings → Ownership
+  // verification → HTML tag. Leaving it empty is harmless.
+  verification: { google: "" },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -81,6 +93,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${plexSans.variable} ${plexCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg font-sans text-fg antialiased">
+        <ServiceWorkerCleanup />
         <ThemeProvider>
           <a
             href="#main"

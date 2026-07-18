@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Section } from "@/components/ui";
-import { Topology } from "@/components/topology";
 import { identity, skills } from "@/data/portfolio";
 
 export const metadata: Metadata = {
@@ -52,10 +51,10 @@ export default function AboutPage() {
                 height={identity.photo.height}
                 alt={`${identity.name}, ${identity.oneLine}`}
                 sizes="(min-width: 1024px) 30rem, 100vw"
+                priority
                 className="mb-8 w-full rounded border border-rule object-cover"
               />
             ) : null}
-            <Topology />
             <div className="mt-8 rounded border border-rule bg-surface p-5">
               <p className="label">Based in</p>
               <p className="mt-1.5 text-sm text-fg">{identity.location}</p>
