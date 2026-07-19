@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import prathamPhoto from "../../public/pratham.jpeg";
 import { Section, StatBar, ChipRow, ButtonLink, CTABlock } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { FadeIn } from "@/components/fade-in";
@@ -18,27 +20,41 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-5 pb-14 pt-14 sm:pt-20">
-        <div className="max-w-2xl">
-          <FadeIn>
-            <p className="label">{identity.availability}</p>
-          </FadeIn>
-          <FadeIn delay={0.06}>
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
-              {hero.headline}
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.12}>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{hero.sub}</p>
-          </FadeIn>
-          <FadeIn delay={0.18}>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <ButtonLink href={`/projects/${workforceiq.slug}`}>
-                Read the WorkforceIQ case study
-                <ArrowRight className="ml-1.5 inline h-4 w-4" />
-              </ButtonLink>
-              <ButtonLink href="/contact" variant="secondary">
-                Contact me
-              </ButtonLink>
+        <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_0.9fr]">
+          <div className="max-w-2xl">
+            <FadeIn>
+              <p className="label">{identity.availability}</p>
+            </FadeIn>
+            <FadeIn delay={0.06}>
+              <h1 className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
+                {hero.headline}
+              </h1>
+            </FadeIn>
+            <FadeIn delay={0.12}>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{hero.sub}</p>
+            </FadeIn>
+            <FadeIn delay={0.18}>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <ButtonLink href={`/projects/${workforceiq.slug}`}>
+                  Read the WorkforceIQ case study
+                  <ArrowRight className="ml-1.5 inline h-4 w-4" />
+                </ButtonLink>
+                <ButtonLink href="/contact" variant="secondary">
+                  Contact me
+                </ButtonLink>
+              </div>
+            </FadeIn>
+          </div>
+          <FadeIn delay={0.1}>
+            <div className="relative mx-auto aspect-[4/5] w-56 overflow-hidden rounded-lg border border-rule bg-surface sm:w-64 lg:w-full lg:max-w-xs">
+              <Image
+                src={prathamPhoto}
+                alt={`${identity.name} — portrait`}
+                placeholder="blur"
+                priority
+                sizes="(min-width: 1024px) 320px, 256px"
+                className="h-full w-full object-cover"
+              />
             </div>
           </FadeIn>
         </div>
