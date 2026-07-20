@@ -19,7 +19,7 @@ export default function HomePage() {
       <FaqJsonLd />
 
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-5 pb-14 pt-14 sm:pt-20">
+      <section className="hero-grid mx-auto max-w-5xl px-5 pb-14 pt-14 sm:pt-20">
         <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_0.9fr]">
           <div className="max-w-2xl">
             <FadeIn>
@@ -46,7 +46,7 @@ export default function HomePage() {
             </FadeIn>
           </div>
           <FadeIn delay={0.1}>
-            <div className="relative mx-auto aspect-[4/5] w-56 overflow-hidden rounded-lg border border-rule bg-surface sm:w-64 lg:w-full lg:max-w-xs">
+            <div className="portrait-glow relative mx-auto aspect-[4/5] w-56 overflow-hidden rounded-lg border border-rule bg-surface sm:w-64 lg:w-full lg:max-w-xs">
               <Image
                 src={prathamPhoto}
                 alt={`${identity.name} — portrait`}
@@ -67,7 +67,7 @@ export default function HomePage() {
         <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
           {whatIDo.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.05}>
-              <div className="h-full bg-bg p-6 transition-colors hover:bg-surface">
+              <div className="lift h-full bg-bg p-6 hover:bg-surface">
                 <span aria-hidden className="block h-0.5 w-6 bg-accent" />
                 <h3 className="mt-3 font-display text-lg font-semibold text-fg">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
@@ -80,7 +80,7 @@ export default function HomePage() {
       {/* Featured work */}
       <Section label="Featured work" title="WorkforceIQ">
         <Reveal>
-          <article className="mt-6 rounded border border-rule bg-surface p-6 transition-colors hover:border-accent sm:p-8">
+          <article className="lift mt-6 rounded border border-rule bg-surface p-6 sm:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <p className="text-muted">{workforceiq.tagline}</p>
@@ -140,7 +140,7 @@ export default function HomePage() {
         <Section label="Writing" title="Latest posts">
           <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-2">
             {posts.map((post) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`} className="group bg-bg p-6 transition hover:bg-surface">
+              <Link key={post.slug} href={`/blog/${post.slug}`} className="lift group bg-bg p-6 hover:bg-surface">
                 <p className="label">{post.date}</p>
                 <h3 className="mt-2 font-display text-lg font-semibold text-fg group-hover:text-accent-ink">
                   {post.title}

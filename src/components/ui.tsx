@@ -89,10 +89,12 @@ export function ButtonLink({
   variant?: "primary" | "secondary";
   external?: boolean;
 }) {
+  const base =
+    "inline-flex items-center rounded px-4 py-2.5 text-sm font-medium transition duration-200 cursor-pointer hover:-translate-y-0.5 focus-visible:-translate-y-0.5";
   const cls =
     variant === "primary"
-      ? "rounded bg-fg px-4 py-2.5 text-sm font-medium text-bg transition hover:opacity-90"
-      : "rounded border border-rule px-4 py-2.5 text-sm font-medium text-fg transition hover:border-accent";
+      ? `${base} bg-fg text-bg shadow-sm hover:opacity-90 hover:shadow-md`
+      : `${base} border border-rule text-fg hover:border-accent hover:bg-surface`;
 
   if (external) {
     return (
