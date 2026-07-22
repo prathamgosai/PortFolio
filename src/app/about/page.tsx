@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <Section label="About" title="From the server room to production software.">
+      <Section label="About" title="From the server room to production software." titleAs="h1">
         <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="post">
             <p>
@@ -55,7 +55,7 @@ export default function AboutPage() {
                 className="mb-8 w-full rounded border border-rule object-cover"
               />
             ) : null}
-            <div className="glass mt-8 rounded-2xl p-6">
+            <div className="glass mt-8 rounded-3xl p-6">
               <p className="label">Based in</p>
               <p className="t-small mt-2 text-fg">{identity.location}</p>
               <p className="label mt-5">Availability</p>
@@ -72,7 +72,7 @@ export default function AboutPage() {
               <h3 className="t-card-title text-fg">{group.group}</h3>
               <ul className="mt-4 space-y-2">
                 {group.items.map((item) => (
-                  <li key={item} className="font-mono text-sm leading-relaxed text-muted">
+                  <li key={item} className="font-mono t-small leading-relaxed text-muted">
                     {item}
                   </li>
                 ))}

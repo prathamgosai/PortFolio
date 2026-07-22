@@ -66,16 +66,14 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           { name: post.title, path: `/blog/${post.slug}` },
         ]}
       />
-      <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
+      <Link href="/blog" className="inline-flex items-center gap-1.5 t-small text-muted hover:text-fg">
         <ArrowLeft className="h-4 w-4" />
         All posts
       </Link>
 
       <header className="mt-8 border-b border-rule pb-8">
         <p className="label">{post.date}</p>
-        <h1 className="mt-3 font-display text-3xl font-bold leading-tight tracking-tight text-fg sm:text-4xl">
-          {post.title}
-        </h1>
+        <h1 className="t-hero mt-3 text-fg">{post.title}</h1>
         {post.tags.length > 0 ? (
           <div className="mt-5">
             <ChipRow items={post.tags} />

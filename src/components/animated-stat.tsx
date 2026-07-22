@@ -9,7 +9,13 @@ import { useReducedMotion } from "framer-motion";
  * first client render) show the real final value, so the number is correct with
  * JS disabled and for crawlers; suppressHydrationWarning covers the count-up.
  */
-export function AnimatedStat({ value }: { value: string }) {
+export function AnimatedStat({
+  value,
+  className = "mt-3 font-display text-4xl font-extrabold tracking-tight text-fg tabular-nums sm:text-5xl",
+}: {
+  value: string;
+  className?: string;
+}) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLParagraphElement>(null);
   const started = useRef(false);
@@ -50,11 +56,7 @@ export function AnimatedStat({ value }: { value: string }) {
   }, [reduced, target, suffix]);
 
   return (
-    <p
-      ref={ref}
-      suppressHydrationWarning
-      className="mt-3 font-display text-4xl font-extrabold tracking-tight text-fg tabular-nums sm:text-5xl"
-    >
+    <p ref={ref} suppressHydrationWarning className={className}>
       {display}
     </p>
   );

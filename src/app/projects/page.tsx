@@ -23,11 +23,12 @@ export default function ProjectsPage() {
       <Section
         label="Projects"
         title="Work I can walk you through in detail."
+        titleAs="h1"
         intro="One project I designed and shipped end to end, and an honest account of what I'm still learning."
       >
-        <article className="glass glass-hover mt-8 rounded-xl p-6 sm:p-8">
+        <article className="glass glass-hover mt-8 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="t-h3 text-fg">{workforceiq.name}</h3>
+            <h2 className="t-h3 text-fg">{workforceiq.name}</h2>
             <p className="label">{workforceiq.period}</p>
           </div>
           <p className="t-body measure mt-4 text-muted">{workforceiq.tagline}</p>
@@ -67,7 +68,7 @@ export default function ProjectsPage() {
           {learningInPublic.map((item) => (
             <li key={item.name} className="bg-bg p-6 transition-colors hover:bg-surface">
               <p className="label">{item.kind}</p>
-              <h3 className="mt-2 font-mono text-base font-medium text-fg">{item.name}</h3>
+              <h3 className="mt-2 font-mono t-small font-medium text-fg">{item.name}</h3>
               <p className="t-small mt-2 text-muted">{item.body}</p>
               <a
                 href={item.href}

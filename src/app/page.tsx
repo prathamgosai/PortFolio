@@ -1,14 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import prathamPhoto from "../../public/pratham.jpeg";
-import { Section, StatBar, ChipRow, ButtonLink, CTABlock } from "@/components/ui";
+import { Section, ChipRow, ButtonLink, CTABlock } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
-import { FadeIn } from "@/components/fade-in";
+import { Hero } from "@/components/hero";
 import { PersonJsonLd } from "@/components/person-jsonld";
 import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
-import { experience, hero, identity, whatIDo, workforceiq } from "@/data/portfolio";
+import { experience, identity, whatIDo, workforceiq } from "@/data/portfolio";
 
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 2);
@@ -18,47 +16,7 @@ export default function HomePage() {
       <PersonJsonLd />
       <FaqJsonLd />
 
-      {/* Hero */}
-      <section className="hero-grid mx-auto max-w-5xl px-5 pb-20 pt-16 sm:pt-24">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_0.9fr]">
-          <div className="max-w-2xl">
-            <FadeIn>
-              <p className="label">{identity.availability}</p>
-            </FadeIn>
-            <FadeIn delay={0.06}>
-              <h1 className="t-hero mt-5 text-fg">{hero.headline}</h1>
-            </FadeIn>
-            <FadeIn delay={0.12}>
-              <p className="t-body measure mt-6 font-medium text-fg/85">{hero.sub}</p>
-            </FadeIn>
-            <FadeIn delay={0.18}>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <ButtonLink href={`/projects/${workforceiq.slug}`}>
-                  Read the WorkforceIQ case study
-                  <ArrowRight className="ml-1.5 inline h-4 w-4" />
-                </ButtonLink>
-                <ButtonLink href="/contact" variant="secondary">
-                  Contact me
-                </ButtonLink>
-              </div>
-            </FadeIn>
-          </div>
-          <FadeIn delay={0.1}>
-            <div className="portrait-glow relative mx-auto aspect-[4/5] w-56 overflow-hidden rounded-lg border border-rule bg-surface sm:w-64 lg:w-full lg:max-w-xs">
-              <Image
-                src={prathamPhoto}
-                alt={`${identity.name} — portrait`}
-                placeholder="blur"
-                priority
-                sizes="(min-width: 1024px) 320px, 256px"
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      <StatBar />
+      <Hero />
 
       {/* What I do */}
       <Section label="What I do" title="Three layers, one job: make things work.">
@@ -78,7 +36,7 @@ export default function HomePage() {
       {/* Featured work */}
       <Section label="Featured work" title="WorkforceIQ">
         <Reveal>
-          <article className="glass glass-hover mt-6 rounded-xl p-6 sm:p-8">
+          <article className="glass glass-hover mt-6 rounded-3xl p-6 sm:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <p className="t-body text-muted">{workforceiq.tagline}</p>

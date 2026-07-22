@@ -16,6 +16,7 @@ export default function ExperiencePage() {
       <Section
         label="Experience"
         title="Where I've done the work."
+        titleAs="h1"
         intro="Ten-plus months keeping desktops and networks running, alongside automating live hotel operations and building the software the group runs on."
       >
         {identity.resumePdf ? (

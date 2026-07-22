@@ -17,6 +17,7 @@ export default function BlogPage() {
     <Section
       label="Blog"
       title="Writing"
+      titleAs="h1"
       intro="Notes on the systems I build and the systems I keep running."
     >
       {posts.length === 0 ? (

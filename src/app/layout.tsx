@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Sora, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ServiceWorkerCleanup } from "@/components/sw-cleanup";
+import { PremiumInteractions } from "@/components/premium-interactions";
+import { ScrollProgress } from "@/components/scroll-progress";
+import { Ambient } from "@/components/ambient";
+import { CommandPalette } from "@/components/command-palette";
 import { SITE_URL, identity } from "@/data/portfolio";
 import "./globals.css";
 
@@ -15,11 +19,11 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-// Display face for headings — geometric, confident, dominates the page.
-const sora = Sora({
+// Display face for headings — geometric, futuristic, dominates the page.
+const spaceGrotesk = Space_Grotesk({
   variable: "--font-plex-condensed",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -90,47 +94,9 @@ export const viewport: Viewport = {
   ],
 };
 
-/**
- * Person + WebSite structured data. This is what tells Google that this domain
- * is the authoritative page about the person "Pratham Gosai" — the `sameAs`
- * links tie the social profiles to one entity, which is exactly what a
- * name-search wants to resolve. Rendered as JSON-LD in <head>.
- */
-const personJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "@id": `${SITE_URL}/#person`,
-  name: identity.name,
-  alternateName: identity.fullName,
-  url: SITE_URL,
-  image: `${SITE_URL}${identity.photo.src}`,
-  jobTitle: identity.jobTitle,
-  description: identity.oneLine,
-  email: identity.email ? `mailto:${identity.email}` : undefined,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Surat",
-    addressRegion: "Gujarat",
-    addressCountry: "IN",
-  },
-  sameAs: [identity.linkedin, identity.github, identity.instagram],
-  knowsAbout: [
-    "IT support",
-    "Network engineering",
-    "AI automation",
-    "Full-stack TypeScript development",
-    "Claude API",
-  ],
-};
-
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${SITE_URL}/#website`,
-  url: SITE_URL,
-  name: `${identity.name} — Portfolio`,
-  publisher: { "@id": `${SITE_URL}/#person` },
-};
+// NOTE: Person + WebSite structured data lives in a single canonical <PersonJsonLd/>
+// (@graph with ProfilePage → Person → WebSite) rendered on the home page. Do not
+// duplicate it here — two Person/WebSite nodes with conflicting @ids dilute the entity.
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -138,27 +104,25 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="en"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${jakarta.variable} ${sora.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg font-sans text-fg antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
+        <Ambient />
         <ServiceWorkerCleanup />
+        <ScrollProgress />
+        <PremiumInteractions />
         <ThemeProvider>
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-surface focus:px-4 focus:py-2 focus:text-fg"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-fg"
           >
             Skip to content
           </a>
           <Navbar />
-          <main id="main">{children}</main>
+          <CommandPalette />
+          <main id="main" className="pt-4">
+            {children}
+          </main>
           <Footer />
         </ThemeProvider>
       </body>

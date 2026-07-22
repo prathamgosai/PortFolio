@@ -8,17 +8,21 @@ export function Section({
   intro,
   children,
   className = "",
+  titleAs = "h2",
 }: {
   label?: string;
   title?: string;
   intro?: string;
   children?: React.ReactNode;
   className?: string;
+  /** Use "h1" for a page's top section so every page has exactly one h1. */
+  titleAs?: "h1" | "h2";
 }) {
+  const Title = titleAs;
   return (
     <section className={`mx-auto max-w-5xl px-5 py-20 sm:py-24 ${className}`}>
       {label ? <p className="label">{label}</p> : null}
-      {title ? <h2 className="t-h2 mt-4 text-fg">{title}</h2> : null}
+      {title ? <Title className="t-h2 mt-4 text-fg">{title}</Title> : null}
       {intro ? <p className="t-body measure mt-5 text-muted">{intro}</p> : null}
       {children}
     </section>
@@ -68,7 +72,7 @@ export function CTABlock({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="glass glass-hover rounded-2xl p-8 sm:p-10">
+    <div className="glass glass-hover rounded-3xl p-8 sm:p-10">
       <h2 className="t-h2 text-fg">{title}</h2>
       <p className="t-body measure mt-5 text-muted">{body}</p>
       <div className="mt-8 flex flex-wrap gap-4">{children}</div>
@@ -87,23 +91,30 @@ export function ButtonLink({
   variant?: "primary" | "secondary";
   external?: boolean;
 }) {
+  // Transitions come from the `.magnetic` class (covers transform/shadow/border/
+  // opacity) — no Tailwind transition utility here, so the transform tween isn't
+  // dropped now that .magnetic sits in @layer components.
   const base =
-    "inline-flex items-center gap-1.5 rounded-xl px-6 py-3.5 text-[1.0625rem] font-semibold tracking-[0.01em] transition-all duration-200 ease-out cursor-pointer hover:-translate-y-0.5 focus-visible:-translate-y-0.5";
+    "magnetic relative inline-flex items-center rounded-2xl px-6 py-3.5 text-[1.0625rem] font-semibold tracking-[0.01em] cursor-pointer hover:opacity-95 focus-visible:-translate-y-0.5";
   const cls =
     variant === "primary"
-      ? `${base} bg-fg text-bg shadow-sm hover:opacity-90 hover:shadow-lg`
-      : `${base} border border-rule text-fg hover:border-accent hover:bg-surface`;
+      ? `${base} btn-primary bg-fg text-bg`
+      : `${base} glass text-fg hover:border-accent`;
+
+  // Wrap in an element (not a bare text node) so `.glass > *` lifts the label
+  // above the sheen — otherwise text on the glass (secondary) variant paints under it.
+  const inner = <span className="relative z-[1] inline-flex items-center gap-1.5">{children}</span>;
 
   if (external) {
     return (
       <a href={href} target="_blank" rel="noreferrer" className={cls}>
-        {children}
+        {inner}
       </a>
     );
   }
   return (
     <Link href={href} className={cls}>
-      {children}
+      {inner}
     </Link>
   );
 }

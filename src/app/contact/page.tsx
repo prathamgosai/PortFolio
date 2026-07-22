@@ -17,6 +17,7 @@ export default function ContactPage() {
     <Section
       label="Contact"
       title="Let's talk."
+      titleAs="h1"
       intro={email ? "I reply fastest on email and LinkedIn." : "I reply fastest on LinkedIn."}
     >
       <div className="mt-10 flex flex-wrap gap-4">
