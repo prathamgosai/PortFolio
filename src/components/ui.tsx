@@ -16,12 +16,10 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section className={`mx-auto max-w-5xl px-5 py-14 ${className}`}>
+    <section className={`mx-auto max-w-5xl px-5 py-20 sm:py-24 ${className}`}>
       {label ? <p className="label">{label}</p> : null}
-      {title ? (
-        <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-fg sm:text-3xl">{title}</h2>
-      ) : null}
-      {intro ? <p className="mt-3 max-w-2xl text-muted">{intro}</p> : null}
+      {title ? <h2 className="t-h2 mt-4 text-fg">{title}</h2> : null}
+      {intro ? <p className="t-body measure mt-5 text-muted">{intro}</p> : null}
       {children}
     </section>
   );
@@ -29,7 +27,7 @@ export function Section({
 
 export function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded border border-rule px-2 py-1 font-mono text-xs text-muted">{children}</span>
+    <span className="rounded-md border border-rule px-2.5 py-1 font-mono text-[0.8125rem] text-muted">{children}</span>
   );
 }
 
@@ -50,10 +48,10 @@ export function StatBar() {
   return (
     <ul className="mx-auto grid max-w-5xl grid-cols-1 gap-px border-y border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
-        <li key={stat.label} className="bg-bg px-5 py-6">
+        <li key={stat.label} className="bg-bg px-6 py-8">
           <span aria-hidden className="block h-0.5 w-6 bg-accent" />
           <AnimatedStat value={stat.value} />
-          <p className="mt-1 text-sm leading-snug text-muted">{stat.label}</p>
+          <p className="t-small mt-2 leading-snug text-muted">{stat.label}</p>
         </li>
       ))}
     </ul>
@@ -70,10 +68,10 @@ export function CTABlock({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="rounded border border-rule bg-surface p-8">
-      <h2 className="font-display text-2xl font-bold tracking-tight text-fg">{title}</h2>
-      <p className="mt-3 max-w-xl text-muted">{body}</p>
-      <div className="mt-6 flex flex-wrap gap-3">{children}</div>
+    <div className="glass glass-hover rounded-2xl p-8 sm:p-10">
+      <h2 className="t-h2 text-fg">{title}</h2>
+      <p className="t-body measure mt-5 text-muted">{body}</p>
+      <div className="mt-8 flex flex-wrap gap-4">{children}</div>
     </div>
   );
 }
@@ -90,10 +88,10 @@ export function ButtonLink({
   external?: boolean;
 }) {
   const base =
-    "inline-flex items-center rounded px-4 py-2.5 text-sm font-medium transition duration-200 cursor-pointer hover:-translate-y-0.5 focus-visible:-translate-y-0.5";
+    "inline-flex items-center gap-1.5 rounded-xl px-6 py-3.5 text-[1.0625rem] font-semibold tracking-[0.01em] transition-all duration-200 ease-out cursor-pointer hover:-translate-y-0.5 focus-visible:-translate-y-0.5";
   const cls =
     variant === "primary"
-      ? `${base} bg-fg text-bg shadow-sm hover:opacity-90 hover:shadow-md`
+      ? `${base} bg-fg text-bg shadow-sm hover:opacity-90 hover:shadow-lg`
       : `${base} border border-rule text-fg hover:border-accent hover:bg-surface`;
 
   if (external) {

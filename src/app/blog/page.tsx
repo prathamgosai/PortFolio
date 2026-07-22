@@ -25,12 +25,12 @@ export default function BlogPage() {
         <ul className="mt-8 border-t border-rule">
           {posts.map((post) => (
             <li key={post.slug} className="border-b border-rule">
-              <Link href={`/blog/${post.slug}`} className="group block py-6">
+              <Link href={`/blog/${post.slug}`} className="group block py-8">
                 <p className="label">{post.date}</p>
-                <h2 className="mt-2 font-display text-xl font-semibold text-fg group-hover:text-accent-ink">
+                <h2 className="t-h3 mt-3 text-fg transition-colors group-hover:text-accent-ink">
                   {post.title}
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{post.excerpt}</p>
+                <p className="t-body measure mt-3 text-muted">{post.excerpt}</p>
               </Link>
             </li>
           ))}

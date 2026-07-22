@@ -38,13 +38,13 @@ export default function ExperiencePage() {
               <p className="label">
                 {role.period} · {role.employment}
               </p>
-              <h2 className="mt-2 font-display text-xl font-semibold text-fg">{role.role}</h2>
-              <p className="mt-0.5 text-sm text-muted">
+              <h2 className="t-card-title mt-2 text-fg">{role.role}</h2>
+              <p className="t-small mt-1 text-muted">
                 {role.company} · {role.location}
               </p>
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-5 space-y-2.5">
                 {role.bullets.map((bullet) => (
-                  <li key={bullet} className="flex gap-3 text-sm leading-relaxed text-muted">
+                  <li key={bullet} className="flex gap-3 t-small text-muted">
                     <span aria-hidden className="mt-2.5 h-px w-2.5 shrink-0 bg-rule" />
                     <span>{bullet}</span>
                   </li>
@@ -58,9 +58,9 @@ export default function ExperiencePage() {
       <Section label="Education & training" title="How I got here.">
         <ul className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-2">
           {education.map((item) => (
-            <li key={item.title} className="bg-bg p-5">
-              <h3 className="font-display text-base font-semibold text-fg">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted">{item.org}</p>
+            <li key={item.title} className="bg-bg p-6">
+              <h3 className="t-card-title text-fg">{item.title}</h3>
+              <p className="t-small mt-1.5 text-muted">{item.org}</p>
               <p className="label mt-2">{item.detail}</p>
             </li>
           ))}
@@ -77,19 +77,19 @@ export default function ExperiencePage() {
             <div key={group.issuer}>
               <div className="flex items-baseline gap-3">
                 <span aria-hidden className="h-0.5 w-6 shrink-0 bg-accent" />
-                <h3 className="font-display text-lg font-semibold text-fg">{group.issuer}</h3>
+                <h3 className="t-card-title text-fg">{group.issuer}</h3>
                 <span className="label">{group.items.length}</span>
               </div>
 
               <ul className="mt-4 space-y-px border border-rule bg-rule">
                 {group.items.map((cert) => (
-                  <li key={cert.name} className="bg-bg p-5">
+                  <li key={cert.name} className="bg-bg p-6">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <h4 className="max-w-2xl font-medium text-fg">{cert.name}</h4>
+                      <h4 className="measure t-small font-semibold text-fg">{cert.name}</h4>
                       {cert.date ? <p className="label shrink-0">{cert.date}</p> : null}
                     </div>
                     {cert.detail ? (
-                      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{cert.detail}</p>
+                      <p className="t-small measure mt-2 text-muted">{cert.detail}</p>
                     ) : null}
                     {cert.credentialId || cert.verifyUrl ? (
                       <p className="label mt-2">
@@ -119,7 +119,7 @@ export default function ExperiencePage() {
           href={CERTS_URL}
           target="_blank"
           rel="noreferrer"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-link hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 t-small font-semibold text-link hover:underline"
         >
           Verify on LinkedIn
           <ArrowUpRight className="h-4 w-4" />

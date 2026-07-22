@@ -25,16 +25,16 @@ export default function ProjectsPage() {
         title="Work I can walk you through in detail."
         intro="One project I designed and shipped end to end, and an honest account of what I'm still learning."
       >
-        <article className="mt-8 rounded border border-rule bg-surface p-6 sm:p-8">
+        <article className="glass glass-hover mt-8 rounded-xl p-6 sm:p-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-display text-2xl font-bold tracking-tight text-fg">{workforceiq.name}</h3>
+            <h3 className="t-h3 text-fg">{workforceiq.name}</h3>
             <p className="label">{workforceiq.period}</p>
           </div>
-          <p className="mt-3 max-w-2xl text-muted">{workforceiq.tagline}</p>
+          <p className="t-body measure mt-4 text-muted">{workforceiq.tagline}</p>
 
-          <ul className="mt-5 space-y-2.5">
+          <ul className="mt-6 space-y-3">
             {workforceiq.outcomes.map((outcome) => (
-              <li key={outcome} className="flex gap-3 text-sm leading-relaxed text-fg">
+              <li key={outcome} className="flex gap-3 t-small text-fg">
                 <span aria-hidden className="mt-2 h-px w-3 shrink-0 bg-accent" />
                 <span>{outcome}</span>
               </li>
@@ -65,15 +65,15 @@ export default function ProjectsPage() {
       >
         <ul className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
           {learningInPublic.map((item) => (
-            <li key={item.name} className="bg-bg p-5 transition-colors hover:bg-surface">
+            <li key={item.name} className="bg-bg p-6 transition-colors hover:bg-surface">
               <p className="label">{item.kind}</p>
-              <h3 className="mt-2 font-mono text-sm font-medium text-fg">{item.name}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
+              <h3 className="mt-2 font-mono text-base font-medium text-fg">{item.name}</h3>
+              <p className="t-small mt-2 text-muted">{item.body}</p>
               <a
                 href={item.href}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-sm text-link hover:underline"
+                className="mt-3 inline-flex items-center gap-1 t-small font-medium text-link hover:underline"
               >
                 GitHub
                 <ArrowUpRight className="h-3.5 w-3.5" />

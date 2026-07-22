@@ -19,19 +19,17 @@ export default function HomePage() {
       <FaqJsonLd />
 
       {/* Hero */}
-      <section className="hero-grid mx-auto max-w-5xl px-5 pb-14 pt-14 sm:pt-20">
+      <section className="hero-grid mx-auto max-w-5xl px-5 pb-20 pt-16 sm:pt-24">
         <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_0.9fr]">
           <div className="max-w-2xl">
             <FadeIn>
               <p className="label">{identity.availability}</p>
             </FadeIn>
             <FadeIn delay={0.06}>
-              <h1 className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-6xl">
-                {hero.headline}
-              </h1>
+              <h1 className="t-hero mt-5 text-fg">{hero.headline}</h1>
             </FadeIn>
             <FadeIn delay={0.12}>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{hero.sub}</p>
+              <p className="t-body measure mt-6 font-medium text-fg/85">{hero.sub}</p>
             </FadeIn>
             <FadeIn delay={0.18}>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -67,10 +65,10 @@ export default function HomePage() {
         <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
           {whatIDo.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.05}>
-              <div className="lift h-full bg-bg p-6 hover:bg-surface">
+              <div className="lift h-full bg-bg p-7 hover:bg-surface sm:p-8">
                 <span aria-hidden className="block h-0.5 w-6 bg-accent" />
-                <h3 className="mt-3 font-display text-lg font-semibold text-fg">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
+                <h3 className="t-card-title mt-4 text-fg">{item.title}</h3>
+                <p className="t-small mt-3 text-muted">{item.body}</p>
               </div>
             </Reveal>
           ))}
@@ -80,13 +78,13 @@ export default function HomePage() {
       {/* Featured work */}
       <Section label="Featured work" title="WorkforceIQ">
         <Reveal>
-          <article className="lift mt-6 rounded border border-rule bg-surface p-6 sm:p-8">
+          <article className="glass glass-hover mt-6 rounded-xl p-6 sm:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
-                <p className="text-muted">{workforceiq.tagline}</p>
-                <ul className="mt-5 space-y-2.5">
+                <p className="t-body text-muted">{workforceiq.tagline}</p>
+                <ul className="mt-6 space-y-3">
                   {workforceiq.outcomes.map((outcome) => (
-                    <li key={outcome} className="flex gap-3 text-sm leading-relaxed text-fg">
+                    <li key={outcome} className="flex gap-3 t-small text-fg">
                       <span aria-hidden className="mt-2 h-px w-3 shrink-0 bg-accent" />
                       <span>{outcome}</span>
                     </li>
@@ -106,7 +104,7 @@ export default function HomePage() {
                   <ChipRow items={workforceiq.stack} />
                 </div>
                 <p className="label mt-6">Built</p>
-                <p className="mt-2 text-sm text-muted">
+                <p className="t-small mt-2 text-muted">
                   {workforceiq.period} · at {workforceiq.builtAt}
                 </p>
               </div>
@@ -121,14 +119,14 @@ export default function HomePage() {
           {experience.map((role) => (
             <li key={role.company} className="border-l border-rule pl-5">
               <p className="label">{role.period}</p>
-              <h3 className="mt-1.5 font-display text-lg font-semibold text-fg">{role.role}</h3>
-              <p className="text-sm text-muted">{role.company}</p>
+              <h3 className="t-card-title mt-2 text-fg">{role.role}</h3>
+              <p className="t-small text-muted">{role.company}</p>
             </li>
           ))}
         </ul>
         <Link
           href="/experience"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-link hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 t-small font-semibold text-link hover:underline"
         >
           Full timeline, education & certifications
           <ArrowRight className="h-4 w-4" />
@@ -142,16 +140,16 @@ export default function HomePage() {
             {posts.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`} className="lift group bg-bg p-6 hover:bg-surface">
                 <p className="label">{post.date}</p>
-                <h3 className="mt-2 font-display text-lg font-semibold text-fg group-hover:text-accent-ink">
+                <h3 className="t-card-title mt-3 text-fg group-hover:text-accent-ink">
                   {post.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{post.excerpt}</p>
+                <p className="t-small mt-3 text-muted">{post.excerpt}</p>
               </Link>
             ))}
           </div>
           <Link
             href="/blog"
-            className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-link hover:underline"
+            className="mt-6 inline-flex items-center gap-1.5 t-small font-semibold text-link hover:underline"
           >
             All posts
             <ArrowRight className="h-4 w-4" />

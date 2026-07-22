@@ -55,11 +55,11 @@ export default function AboutPage() {
                 className="mb-8 w-full rounded border border-rule object-cover"
               />
             ) : null}
-            <div className="mt-8 rounded border border-rule bg-surface p-5">
+            <div className="glass mt-8 rounded-2xl p-6">
               <p className="label">Based in</p>
-              <p className="mt-1.5 text-sm text-fg">{identity.location}</p>
-              <p className="label mt-4">Availability</p>
-              <p className="mt-1.5 text-sm text-fg">Open to on-site, hybrid, or remote roles</p>
+              <p className="t-small mt-2 text-fg">{identity.location}</p>
+              <p className="label mt-5">Availability</p>
+              <p className="t-small mt-2 text-fg">Open to on-site, hybrid, or remote roles</p>
             </div>
           </div>
         </div>
@@ -68,11 +68,11 @@ export default function AboutPage() {
       <Section label="Skills" title="What I work with.">
         <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
           {skills.map((group) => (
-            <div key={group.group} className="bg-bg p-5">
-              <h3 className="font-display text-base font-semibold text-fg">{group.group}</h3>
-              <ul className="mt-3 space-y-1.5">
+            <div key={group.group} className="bg-bg p-6">
+              <h3 className="t-card-title text-fg">{group.group}</h3>
+              <ul className="mt-4 space-y-2">
                 {group.items.map((item) => (
-                  <li key={item} className="font-mono text-xs leading-relaxed text-muted">
+                  <li key={item} className="font-mono text-sm leading-relaxed text-muted">
                     {item}
                   </li>
                 ))}

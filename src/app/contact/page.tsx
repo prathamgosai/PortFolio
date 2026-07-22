@@ -19,7 +19,7 @@ export default function ContactPage() {
       title="Let's talk."
       intro={email ? "I reply fastest on email and LinkedIn." : "I reply fastest on LinkedIn."}
     >
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-10 flex flex-wrap gap-4">
         {email ? (
           <ButtonLink href={`mailto:${email}`} external>
             Email me
@@ -39,14 +39,14 @@ export default function ContactPage() {
         </ButtonLink>
       </div>
 
-      <dl className="mt-10 grid gap-px border border-rule bg-rule sm:grid-cols-2">
-        <div className="bg-bg p-5">
+      <dl className="mt-12 grid gap-px border border-rule bg-rule sm:grid-cols-2">
+        <div className="bg-bg p-6">
           <dt className="label">Based in</dt>
-          <dd className="mt-1.5 text-sm text-fg">{identity.location}</dd>
+          <dd className="t-small mt-2 text-fg">{identity.location}</dd>
         </div>
-        <div className="bg-bg p-5">
+        <div className="bg-bg p-6">
           <dt className="label">Availability</dt>
-          <dd className="mt-1.5 text-sm text-fg">Open to on-site, hybrid, or remote roles</dd>
+          <dd className="t-small mt-2 text-fg">Open to on-site, hybrid, or remote roles</dd>
         </div>
       </dl>
     </Section>

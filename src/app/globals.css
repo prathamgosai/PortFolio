@@ -69,6 +69,95 @@ html.dark {
 body {
   background: var(--bg);
   color: var(--fg);
+  /* Body: fluid 17→19px, generous rhythm, subtle tracking for premium feel. */
+  font-size: clamp(1.0625rem, 0.98rem + 0.42vw, 1.1875rem);
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ * TYPOGRAPHY SCALE — fluid clamp() system, SaaS-grade hierarchy.
+ * Headings use the display face and dominate; body never competes.
+ * ─────────────────────────────────────────────────────────────
+ */
+.t-hero {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.625rem, 1.6rem + 5vw, 4.5rem); /* 42 → 72px */
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.t-h2 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 1.35rem + 3vw, 3rem); /* 32 → 48px */
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.t-h3 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.375rem, 1.1rem + 1.1vw, 1.75rem); /* 22 → 28px */
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.t-body {
+  font-size: clamp(1.0625rem, 0.98rem + 0.42vw, 1.1875rem); /* 17 → 19px */
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+}
+.t-card-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); /* 18 → 22px */
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.t-small {
+  font-size: 1rem; /* 16px */
+  line-height: 1.6;
+}
+.t-caption {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.55;
+}
+
+/* Constrain measure — long lines are never allowed. */
+.measure {
+  max-width: 46rem; /* ~736px */
+}
+
+/* Gradient text — reserved for a single important keyword. */
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--accent-ink) 0%,
+    color-mix(in srgb, var(--cable) 85%, var(--accent)) 60%,
+    var(--cable) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Fade-in heading / slide-up paragraph entrance micro-interactions. */
+@keyframes t-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: t-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Blueprint grid + amber signal glow behind the hero. Subtle depth, no CLS. */
@@ -103,6 +192,70 @@ body {
   pointer-events: none;
 }
 
+/**
+ * Liquid glass — frosted, translucent surface with a top gloss highlight and
+ * a soft inner rim. Uses the theme tokens so it reads correctly in both modes.
+ * Relies on backdrop-filter; degrades to a solid translucent panel where the
+ * browser lacks support.
+ */
+.glass {
+  position: relative;
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--fg) 6%, transparent),
+    0 12px 34px -18px color-mix(in srgb, var(--enclosure) 55%, transparent);
+}
+.dark .glass {
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border-color: color-mix(in srgb, #fff 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 14px 40px -18px rgba(0, 0, 0, 0.65);
+}
+/* Diagonal sheen swept across the top — the "liquid" highlight. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #fff 22%, transparent) 0%,
+    transparent 42%,
+    transparent 100%
+  );
+}
+.dark .glass::before {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #fff 8%, transparent) 0%,
+    transparent 42%,
+    transparent 100%
+  );
+}
+/* Keep real content above the sheen layer. */
+.glass > * {
+  position: relative;
+  z-index: 1;
+}
+.glass-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.glass-hover:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent),
+    0 18px 44px -16px color-mix(in srgb, var(--signal) 40%, transparent);
+}
+
 /* Soft, evolved-shadow lift for interactive cards (200–300ms). */
 .lift {
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
@@ -126,34 +279,41 @@ body {
 /* Cable-label eyebrow — the recurring mono motif. */
 .label {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.18em;
+  font-size: 0.8125rem; /* 13px — legible eyebrow, keeps the cable-tag motif */
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--fg-muted);
+  color: var(--accent-ink);
+  display: inline-block;
 }
 
 /* Rendered markdown (remark-html output). No typography plugin — tokens only. */
 .post {
   color: var(--fg-muted);
-  line-height: 1.75;
+  font-size: clamp(1.0625rem, 0.98rem + 0.42vw, 1.1875rem); /* 17 → 19px */
+  line-height: 1.8;
+  letter-spacing: 0.2px;
 }
 .post > * + * {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 .post h2 {
   font-family: var(--font-display), sans-serif;
-  font-size: 1.5rem;
+  font-size: clamp(1.625rem, 1.3rem + 1.4vw, 2rem); /* 26 → 32px */
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   color: var(--fg);
-  margin-top: 2.75rem;
+  margin-top: 3.5rem;
 }
 .post h3 {
   font-family: var(--font-display), sans-serif;
-  font-size: 1.175rem;
-  font-weight: 600;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); /* 20 → 24px */
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   color: var(--fg);
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 }
 .post strong {
   color: var(--fg);

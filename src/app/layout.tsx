@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Sans_Condensed, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Sora, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -7,22 +7,28 @@ import { ServiceWorkerCleanup } from "@/components/sw-cleanup";
 import { SITE_URL, identity } from "@/data/portfolio";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
+// Primary UI/body type — modern SaaS grotesque with excellent readability.
+const jakarta = Plus_Jakarta_Sans({
   variable: "--font-plex-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-const plexCondensed = IBM_Plex_Sans_Condensed({
+// Display face for headings — geometric, confident, dominates the page.
+const sora = Sora({
   variable: "--font-plex-condensed",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["600", "700", "800"],
+  display: "swap",
 });
 
+// Retained for the eyebrow/label "cable-tag" motif — a brand signature.
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -84,15 +90,65 @@ export const viewport: Viewport = {
   ],
 };
 
+/**
+ * Person + WebSite structured data. This is what tells Google that this domain
+ * is the authoritative page about the person "Pratham Gosai" — the `sameAs`
+ * links tie the social profiles to one entity, which is exactly what a
+ * name-search wants to resolve. Rendered as JSON-LD in <head>.
+ */
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${SITE_URL}/#person`,
+  name: identity.name,
+  alternateName: identity.fullName,
+  url: SITE_URL,
+  image: `${SITE_URL}${identity.photo.src}`,
+  jobTitle: identity.jobTitle,
+  description: identity.oneLine,
+  email: identity.email ? `mailto:${identity.email}` : undefined,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Surat",
+    addressRegion: "Gujarat",
+    addressCountry: "IN",
+  },
+  sameAs: [identity.linkedin, identity.github, identity.instagram],
+  knowsAbout: [
+    "IT support",
+    "Network engineering",
+    "AI automation",
+    "Full-stack TypeScript development",
+    "Claude API",
+  ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  url: SITE_URL,
+  name: `${identity.name} — Portfolio`,
+  publisher: { "@id": `${SITE_URL}/#person` },
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${plexSans.variable} ${plexCondensed.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${sora.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg font-sans text-fg antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <ServiceWorkerCleanup />
         <ThemeProvider>
           <a

@@ -53,7 +53,7 @@ export function AnimatedStat({ value }: { value: string }) {
     <p
       ref={ref}
       suppressHydrationWarning
-      className="mt-3 font-display text-3xl font-bold tracking-tight text-fg tabular-nums"
+      className="mt-3 font-display text-4xl font-extrabold tracking-tight text-fg tabular-nums sm:text-5xl"
     >
       {display}
     </p>

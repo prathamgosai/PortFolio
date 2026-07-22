@@ -21,12 +21,12 @@ export const metadata: Metadata = {
 };
 
 function H2({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-12 font-display text-2xl font-bold tracking-tight text-fg">{children}</h2>;
+  return <h2 className="t-h2 mt-16 text-fg">{children}</h2>;
 }
 
 export default function WorkforceIQPage() {
   return (
-    <article className="mx-auto max-w-3xl px-5 py-14">
+    <article className="mx-auto max-w-3xl px-5 py-20 sm:py-24">
       <BreadcrumbJsonLd
         items={[
           { name: "Home", path: "/" },
@@ -41,10 +41,8 @@ export default function WorkforceIQPage() {
 
       <header className="mt-8">
         <p className="label">Case study · {workforceiq.period}</p>
-        <h1 className="mt-3 font-display text-4xl font-bold leading-tight tracking-tight text-fg sm:text-5xl">
-          {workforceiq.name}
-        </h1>
-        <p className="mt-4 text-lg text-muted">{workforceiq.tagline}</p>
+        <h1 className="t-hero mt-4 text-fg">{workforceiq.name}</h1>
+        <p className="t-body measure mt-5 text-muted">{workforceiq.tagline}</p>
       </header>
 
       {/* TL;DR */}
@@ -59,7 +57,7 @@ export default function WorkforceIQPage() {
         ].map((row) => (
           <div key={row.k} className="bg-bg p-4">
             <dt className="label">{row.k}</dt>
-            <dd className="mt-1.5 text-sm text-fg">{row.v}</dd>
+            <dd className="t-small mt-1.5 text-fg">{row.v}</dd>
           </div>
         ))}
       </dl>
