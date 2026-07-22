@@ -13,6 +13,7 @@ import {
 } from "framer-motion";
 import { Command, Menu, Moon, Sun, X } from "lucide-react";
 import { OPEN_COMMAND_PALETTE } from "@/components/command-palette";
+import { LanguagePicker } from "@/components/language-picker";
 
 const NAV = [
   { href: "/about", label: "About" },
@@ -60,21 +61,34 @@ export function Navbar() {
 
   return (
     <motion.header
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col items-center gap-2 px-4 pt-3"
       initial={false}
-      animate={{ y: hidden && !reduce ? "-140%" : "0%" }}
+      animate={{ y: hidden && !reduce ? "-160%" : "0%" }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
+      <a
+        href="https://wifiplus.prathamgosai.in/"
+        target="_blank"
+        rel="noreferrer"
+        className="glass pointer-events-auto rounded-full px-3 py-1 text-[11px] tracking-wide text-muted transition-colors hover:text-fg"
+      >
+        <span className="relative z-[1]">
+          <span className="hidden sm:inline">Built by Pratham Gosai — also visit </span>
+          <span className="font-medium text-accent-ink">wifiplus.prathamgosai.in</span>
+        </span>
+      </a>
+
       <nav
         aria-label="Main"
-        className="glass pointer-events-auto flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)]"
+        className="glass pointer-events-auto flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)] lg:max-w-5xl"
       >
         <Link
           href="/"
           className="relative z-[1] ml-1 mr-1 shrink-0 rounded-full px-2 py-1 font-display text-[0.95rem] font-bold tracking-tight text-fg"
         >
           <span className="sm:hidden">PG</span>
-          <span className="hidden sm:inline">Pratham Gosai</span>
+          <span className="hidden sm:inline lg:hidden">Pratham Gosai</span>
+          <span className="hidden lg:inline">Pratham Dharmeshbharti Gosai</span>
         </Link>
 
         <div className="relative z-[1] hidden flex-1 items-center justify-center gap-0.5 md:flex">
@@ -113,6 +127,7 @@ export function Navbar() {
             <Command className="h-3.5 w-3.5" />
             <span className="font-mono">K</span>
           </button>
+          <LanguagePicker />
           <ThemeToggle />
           <Link
             href="/contact"
@@ -138,7 +153,7 @@ export function Navbar() {
           <motion.nav
             id="mobile-nav"
             aria-label="Mobile"
-            className="glass pointer-events-auto absolute left-4 right-4 top-[4.5rem] z-40 overflow-hidden rounded-3xl p-2 shadow-[var(--shadow-lg)] md:hidden"
+            className="glass pointer-events-auto absolute left-4 right-4 top-[6.25rem] z-40 overflow-hidden rounded-3xl p-2 shadow-[var(--shadow-lg)] md:hidden"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

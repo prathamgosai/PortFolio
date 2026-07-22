@@ -129,29 +129,31 @@ export function LanguagePicker() {
   };
 
   return (
-    <div className="relative">
+    // Compact globe trigger sized to match the other pill controls. The native
+    // <select> is overlaid invisibly so the whole button opens the language list
+    // (keeps full keyboard + screen-reader support for all 40+ world languages).
+    <div className="group relative grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-white/8 hover:text-fg focus-within:text-fg">
       {/* Hidden host that Google Translate initialises into. */}
       <div id="google_translate_element" aria-hidden className="absolute h-0 w-0 overflow-hidden" />
 
+      <Globe className="h-4 w-4" aria-hidden />
       <label className="sr-only" htmlFor="language-picker">
         Choose language
       </label>
-      <div className="flex items-center gap-1.5 rounded border border-rule px-2 py-2 text-muted transition focus-within:text-fg hover:text-fg">
-        <Globe className="h-4 w-4 shrink-0" aria-hidden />
-        <select
-          id="language-picker"
-          value={lang}
-          onChange={(e) => applyLanguage(e.target.value)}
-          className="notranslate max-w-[8rem] cursor-pointer bg-transparent text-sm outline-none"
-          translate="no"
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code} className="bg-bg text-fg">
-              {l.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        id="language-picker"
+        value={lang}
+        onChange={(e) => applyLanguage(e.target.value)}
+        aria-label="Choose language"
+        className="notranslate absolute inset-0 cursor-pointer opacity-0"
+        translate="no"
+      >
+        {LANGUAGES.map((l) => (
+          <option key={l.code} value={l.code} className="bg-bg text-fg">
+            {l.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

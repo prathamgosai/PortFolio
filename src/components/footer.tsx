@@ -37,7 +37,7 @@ export function Footer() {
               href="https://wifiplus.prathamgosai.in/"
               target="_blank"
               rel="noreferrer"
-              className="underline transition hover:text-fg"
+              className="font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 transition-colors hover:text-fg"
             >
               wifiplus.prathamgosai.in
             </a>

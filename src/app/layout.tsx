@@ -120,7 +120,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </a>
           <Navbar />
           <CommandPalette />
-          <main id="main" className="pt-4">
+          <main id="main" className="pt-6">
             {children}
           </main>
           <Footer />
