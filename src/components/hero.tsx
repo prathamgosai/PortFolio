@@ -117,7 +117,7 @@ export function Hero() {
               <div className="absolute inset-x-3 bottom-3">
                 <p className="font-display text-lg font-bold text-white">{identity.name}</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-sm text-white/80">
-                  <MapPin className="h-3.5 w-3.5" /> {identity.location}
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> {identity.openTo}
                 </p>
               </div>
             </div>
