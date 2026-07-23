@@ -19,7 +19,9 @@ export const identity = {
   jobTitle: "IT Support & Network Engineer · AI Automation",
   location: "Surat, Gujarat, India",
   locationShort: "Surat, India",
-  availability: "Surat, India · open to on-site, hybrid, remote",
+  /** Markets open to work in — drives the hero availability badge. */
+  openTo: "Dubai, UAE · Surat, India",
+  availability: "Dubai, UAE · Surat, India · open to on-site, hybrid, remote",
   linkedin: "https://www.linkedin.com/in/pratham-gosai-066789312",
   github: "https://github.com/prathamgosai",
   instagram: "https://www.instagram.com/pratham__gosai_",

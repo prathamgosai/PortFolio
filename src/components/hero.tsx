@@ -59,9 +59,9 @@ export function Hero() {
         {/* ── Text column ── */}
         <motion.div variants={container} initial="hidden" animate="show">
           <motion.div variants={item}>
-            <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-fg">
-              <span className="live-dot" />
-              <span className="relative z-[1]">Open to work · {identity.locationShort}</span>
+            <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-fg sm:text-sm">
+              <span className="live-dot shrink-0" />
+              <span className="relative z-[1]">Open to work · {identity.openTo}</span>
             </span>
           </motion.div>
 

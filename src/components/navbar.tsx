@@ -84,11 +84,10 @@ export function Navbar() {
       >
         <Link
           href="/"
-          className="relative z-[1] ml-1 mr-1 shrink-0 rounded-full px-2 py-1 font-display text-[0.95rem] font-bold tracking-tight text-fg"
+          aria-label="Pratham Dharmeshbharti Gosai — home"
+          className="relative z-[1] ml-1 mr-1 shrink-0 whitespace-nowrap rounded-full px-2 py-1 font-display text-[0.7rem] font-bold tracking-tight text-fg sm:text-sm lg:text-[0.95rem]"
         >
-          <span className="sm:hidden">PG</span>
-          <span className="hidden sm:inline lg:hidden">Pratham Gosai</span>
-          <span className="hidden lg:inline">Pratham Dharmeshbharti Gosai</span>
+          Pratham Dharmeshbharti Gosai
         </Link>
 
         <div className="relative z-[1] hidden flex-1 items-center justify-center gap-0.5 md:flex">
@@ -99,7 +98,7 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                className={`relative whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3.5 ${
                   active ? "text-fg" : "text-muted hover:text-fg"
                 }`}
               >
@@ -122,7 +121,7 @@ export function Navbar() {
             type="button"
             onClick={openPalette}
             aria-label="Open command palette"
-            className="hidden items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-muted transition-colors hover:text-fg sm:flex"
+            className="hidden items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-muted transition-colors hover:text-fg lg:flex"
           >
             <Command className="h-3.5 w-3.5" />
             <span className="font-mono">K</span>
