@@ -10,6 +10,14 @@
 /** Live domain. Drives metadataBase, canonicals, JSON-LD, sitemap, and robots. */
 export const SITE_URL = "https://prathamgosai.in";
 
+/**
+ * Web3Forms access key (public by design — safe to expose). Set
+ * NEXT_PUBLIC_WEB3FORMS_KEY in the host env to enable async contact-form
+ * submission. When empty, the contact form gracefully falls back to opening
+ * the visitor's email client via mailto — so it always works.
+ */
+export const web3formsKey = process.env.NEXT_PUBLIC_WEB3FORMS_KEY ?? "";
+
 export const identity = {
   name: "Pratham Gosai",
   /** Full legal name — used for SEO/structured data only; display stays `name`. */
@@ -304,3 +312,48 @@ export const skills = [
     items: ["Documentation", "Incident handling", "Reversible SQL migrations", "Monorepo tooling"],
   },
 ];
+
+/**
+ * FAQs — single source of truth for BOTH the visible FAQ accordion and the
+ * FAQPage JSON-LD (faq-jsonld.tsx). Google requires the structured data to
+ * match visible content, so they must never drift; keep them here only.
+ */
+export const faqs: { q: string; a: string }[] = [
+  {
+    q: "Who is Pratham Gosai?",
+    a: `Pratham Gosai (full name Pratham Dharmeshbharti Gosai) is an IT & network engineer turned AI-automation and full-stack builder based in ${identity.location}. He shipped WorkforceIQ, a workforce platform for 370+ restaurant staff.`,
+  },
+  {
+    q: "What is WorkforceIQ?",
+    a: `${workforceiq.tagline} Pratham designed and built it end to end — auto-scheduling, six-role access control, attendance and leave, WhatsApp notifications, and a FastAPI service that forecasts staffing demand.`,
+  },
+  {
+    q: "What technologies does Pratham Gosai work with?",
+    a: `Infrastructure and networking (L1/L2 desktop support, Windows, LAN/WAN, firewalls, NAS), full-stack development (TypeScript, Next.js, React, NestJS, PostgreSQL, Redis), and AI automation with the Claude API and Python/FastAPI.`,
+  },
+  {
+    q: "What certifications does Pratham Gosai hold?",
+    a: `${certificationCount} certifications across Anthropic (Claude API development and AI Fluency), Cisco Networking Academy, Microsoft, and Meta.`,
+  },
+  {
+    q: "Is Pratham Gosai available for hire?",
+    a: `Yes. Pratham is based in ${identity.locationShort} and open to work in ${identity.openTo} — on-site, hybrid, or remote.`,
+  },
+];
+
+export type Testimonial = {
+  quote: string;
+  name: string;
+  role: string;
+  company?: string;
+  /** Optional public path, e.g. "/testimonials/name.jpg". */
+  avatar?: string;
+  /** Optional link — e.g. the LinkedIn recommendation. */
+  href?: string;
+};
+
+/**
+ * Real testimonials only. Empty by default so the section stays hidden until
+ * genuine quotes are added — never fabricate social proof.
+ */
+export const testimonials: Testimonial[] = [];

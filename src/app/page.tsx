@@ -3,6 +3,10 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Section, ChipRow, ButtonLink, CTABlock } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { Hero } from "@/components/hero";
+import { Faq } from "@/components/faq";
+import { Testimonials } from "@/components/testimonials";
+import { CertTrust } from "@/components/cert-trust";
+import { TechStack } from "@/components/tech-stack";
 import { PersonJsonLd } from "@/components/person-jsonld";
 import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
@@ -18,6 +22,9 @@ export default function HomePage() {
 
       <Hero />
 
+      {/* Certifications credibility strip */}
+      <CertTrust />
+
       {/* What I do */}
       <Section label="What I do" title="Three layers, one job: make things work.">
         <div className="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-3">
@@ -32,6 +39,9 @@ export default function HomePage() {
           ))}
         </div>
       </Section>
+
+      {/* Tech stack */}
+      <TechStack />
 
       {/* Featured work */}
       <Section label="Featured work" title="WorkforceIQ">
@@ -114,6 +124,14 @@ export default function HomePage() {
           </Link>
         </Section>
       ) : null}
+
+      {/* Testimonials (self-hides until real quotes exist) */}
+      <Testimonials />
+
+      {/* FAQ — visible content mirrors the FAQPage structured data */}
+      <Section label="FAQ" title="Questions, answered.">
+        <Faq />
+      </Section>
 
       {/* Contact CTA */}
       <Section>
