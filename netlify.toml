@@ -1,0 +1,17 @@
+# Netlify is kept as a secondary/preview target. Render (render.yaml) runs the
+# production Node server. If you retire one, delete its file so the two cannot
+# drift apart.
+#
+# The security headers in next.config.ts are applied by @netlify/plugin-nextjs
+# as well as by `next start`, so they hold on both targets — do not duplicate
+# them in a [[headers]] block here or the two definitions will diverge.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
