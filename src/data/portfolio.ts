@@ -36,9 +36,12 @@ export const identity = {
   email: "prathamgosai2004@gmail.com" as string | null,
   /** Generated from resume/resume.html — see that file's header to rebuild. */
   resumePdf: "/Pratham-Gosai-Resume.pdf" as string | null,
-  /** Intrinsic dimensions of public/pratham.jpeg — must match the file exactly,
-   *  or <Image> reserves the wrong box and the portrait crops/shifts. */
-  photo: { src: "/pratham.jpeg", width: 1161, height: 1354 },
+  /** Intrinsic dimensions of public/pratham-portrait.jpeg — must match the file
+   *  exactly, or <Image> reserves the wrong box and the portrait crops/shifts.
+   *  The filename carries the version: swapping the photo in place kept the
+   *  /_next/image URL identical, so browsers and the CDN went on serving the
+   *  old headshot. Rename the file when the photo changes. */
+  photo: { src: "/pratham-portrait.jpeg", width: 1161, height: 1354 },
 };
 
 export const hero = {

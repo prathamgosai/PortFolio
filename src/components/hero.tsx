@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Fragment, useRef } from "react";
 import { ArrowRight, ArrowUpRight, Download, MapPin, MousePointer2 } from "lucide-react";
-import prathamPhoto from "@/../public/pratham.jpeg";
+import prathamPhoto from "@/../public/pratham-portrait.jpeg";
 import { ButtonLink } from "@/components/ui";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { hero, identity, workforceiq } from "@/data/portfolio";
