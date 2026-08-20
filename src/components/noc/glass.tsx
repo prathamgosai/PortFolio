@@ -29,6 +29,7 @@ export function Glass({
   lift = true,
   as: Tag = "div",
   maxTilt = 6,
+  scrollable = false,
 }: {
   children: ReactNode;
   className?: string;
@@ -37,6 +38,13 @@ export function Glass({
   lift?: boolean;
   as?: "div" | "section" | "article" | "li" | "aside";
   maxTilt?: number;
+  /**
+   * Set on a Glass that is itself an `overflow-y: auto` scroller. Emits
+   * `data-lenis-prevent`, without which the wheel does nothing inside it while
+   * Lenis is stopped — Lenis preventDefault()s wheel events in that state, so a
+   * nested scroller has to opt out explicitly.
+   */
+  scrollable?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
@@ -66,6 +74,7 @@ export function Glass({
       ref={ref as never}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
+      data-lenis-prevent={scrollable || undefined}
       className={`glass glass-${accent} ${lift ? "glass-lift" : ""} ${className}`}
     >
       {children}

@@ -400,3 +400,291 @@ export type Testimonial = {
  * genuine quotes are added — never fabricate social proof.
  */
 export const testimonials: Testimonial[] = [];
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ * JOURNEY — the dated arc, for the scroll-driven timeline.
+ * ─────────────────────────────────────────────────────────────
+ *
+ * NOT a new set of claims. Every entry below is assembled from dates that
+ * already exist in this file, and the `source` field names where each one comes
+ * from so it stays checkable:
+ *
+ *   2024-10 · 2025-07 · 2025-08 -> certificationGroups (Cisco Networking Academy)
+ *   2025-09                     -> experience[1] (Premware Services India LLP)
+ *   2026-02                     -> certificationGroups (Microsoft, Meta Blueprint)
+ *   2026-03                     -> certificationGroups (Anthropic)
+ *   2026-06                     -> experience[0] (K. Girdharlal / Bookends)
+ *   2026-06 to 2026-07          -> workforceiq.period
+ *
+ * The B.Sc. IT is deliberately ABSENT. Its year was never supplied (§10 Q5), and
+ * a timeline is the one component that cannot render an undated item honestly —
+ * placing it anywhere would mean guessing. It stays on /experience, which does
+ * not need a date to list it.
+ *
+ * `dateTime` must stay a valid <time datetime> value (YYYY-MM); that attribute
+ * is what makes this list machine-readable rather than decorative.
+ */
+export type JourneyEntry = {
+  id: string;
+  /** Display label, e.g. "Oct 2024". */
+  year: string;
+  /** Machine-readable YYYY-MM for <time datetime>. */
+  dateTime: string;
+  org: string;
+  title: string;
+  blurb: string;
+  /** Where in this file the entry is derived from — keep it accurate. */
+  source: string;
+  meta: { label: string; value: string }[];
+};
+
+export const journey: JourneyEntry[] = [
+  {
+    id: "foundations",
+    year: "Oct 2024",
+    dateTime: "2024-10",
+    org: "Cisco Networking Academy",
+    title: "Foundations",
+    blurb:
+      "Started at the bottom of the stack: how machines are built, how they break, and how attackers think about them.",
+    source: "certificationGroups -> Cisco Networking Academy",
+    meta: [
+      { label: "Certified", value: "Introduction to Cybersecurity" },
+      { label: "Also", value: "Computer Hardware Basics · Data Science" },
+    ],
+  },
+  {
+    id: "networking",
+    year: "Aug 2025",
+    dateTime: "2025-08",
+    org: "Cisco Networking Academy",
+    title: "The network layer",
+    blurb:
+      "Network types and components, standards and protocols, Ethernet, IPv4 and IPv6 addressing, routing, and connectivity troubleshooting.",
+    source: "certificationGroups -> Networking Basics (Aug 2025), IoT (Jul 2025)",
+    meta: [
+      { label: "Certified", value: "Networking Basics" },
+      { label: "Also", value: "Introduction to Internet of Things" },
+    ],
+  },
+  {
+    id: "premware",
+    year: "Sep 2025",
+    dateTime: "2025-09",
+    org: "Premware Services India LLP",
+    title: "Into the server room",
+    blurb:
+      "L1/L2 desktop and network support for end users: Windows machines, printers, peripherals, and the LAN/WAN they sit on. The job that makes the reliability claims credible rather than aspirational.",
+    source: "experience[1]",
+    meta: [
+      { label: "Role", value: "Desktop & Network Engineer" },
+      { label: "Status", value: "Ongoing" },
+    ],
+  },
+  {
+    id: "platform-security",
+    year: "Feb 2026",
+    dateTime: "2026-02",
+    org: "Microsoft · Meta",
+    title: "Identity, Zero Trust and platform",
+    blurb:
+      "Zero Trust and best-practice frameworks, Entra Identity Protection, GitHub Advanced Security, and security design aligned with the Cloud Adoption and Well-Architected Frameworks.",
+    source: "certificationGroups -> Microsoft (4), Meta Blueprint (2)",
+    meta: [
+      { label: "Certified", value: "6 across Microsoft & Meta" },
+      { label: "Focus", value: "Identity · Zero Trust · Supply chain" },
+    ],
+  },
+  {
+    id: "anthropic",
+    year: "Mar 2026",
+    dateTime: "2026-03",
+    org: "Anthropic",
+    title: "Building with Claude",
+    blurb:
+      "Claude API integration, prompt design, automating workflows and building AI features, plus the 4 Ds framework for using them responsibly.",
+    source: "certificationGroups -> Anthropic",
+    meta: [
+      { label: "Certified", value: "Claude with the Anthropic API" },
+      { label: "Also", value: "AI Fluency: Framework & Foundations" },
+    ],
+  },
+  {
+    id: "automation",
+    year: "Jun 2026",
+    dateTime: "2026-06",
+    org: "K. Girdharlal International Ltd. / Bookends Hospitality",
+    title: "Automating live operations",
+    blurb:
+      "Automating repetitive reservation and administrative work with AI workflows built on the Claude API, against a real hotel operation with real customers.",
+    source: "experience[0]",
+    meta: [
+      { label: "Role", value: "AI Automation / Reservationist" },
+      { label: "Status", value: "Ongoing" },
+    ],
+  },
+  {
+    id: "workforceiq",
+    year: "Jun – Jul 2026",
+    dateTime: "2026-06",
+    org: "WorkforceIQ",
+    title: "Shipped to production",
+    blurb:
+      "Designed and built the group's workforce platform end to end: 370+ staff, auto-generated rosters, a live role-to-permission matrix, and a FastAPI service that forecasts staffing demand.",
+    source: "workforceiq",
+    meta: [
+      { label: "Scale", value: "370+ staff" },
+      { label: "Stack", value: "TypeScript · NestJS · PostgreSQL · Python" },
+    ],
+  },
+];
+
+/**
+ * CAPABILITIES — "What I build".
+ *
+ * Eight items, and every one is a re-cut of something already in this file
+ * (`skills`, `whatIDo`, `experience[].bullets`, `workforceiq.features`). The
+ * `source` field names which. Nothing here is a new capability claim; if a row
+ * cannot name its source, it does not belong on the site.
+ */
+export type Capability = {
+  title: string;
+  body: string;
+  tags: string[];
+  source: string;
+};
+
+export const capabilities: Capability[] = [
+  {
+    title: "Desktop & endpoint support",
+    body: "Installing, configuring and maintaining Windows desktops, laptops, printers and peripherals, and diagnosing them when they fail.",
+    tags: ["Windows", "L1/L2", "Peripherals"],
+    source: "experience[1].bullets",
+  },
+  {
+    title: "Network operations",
+    body: "Supporting LAN/WAN infrastructure, troubleshooting connectivity end to end, and keeping NAS storage available.",
+    tags: ["LAN/WAN", "Troubleshooting", "NAS"],
+    source: "skills[0]",
+  },
+  {
+    title: "Security & access control",
+    body: "Cisco firewall basics, system and network security, and auth hardening — token rotation and rate limiting — plus a live six-role permission matrix in production.",
+    tags: ["Firewalls", "RBAC", "Auth hardening"],
+    source: "skills[1] + workforceiq.features",
+  },
+  {
+    title: "Full-stack web development",
+    body: "TypeScript across the stack: Next.js and React on the front, NestJS and Node on the back, in a Turborepo monorepo.",
+    tags: ["TypeScript", "Next.js", "NestJS"],
+    source: "skills[3] + whatIDo[1]",
+  },
+  {
+    title: "Databases & migrations",
+    body: "Raw parameterised SQL and reversible migrations over PostgreSQL, because I want to know exactly what runs against the database.",
+    tags: ["PostgreSQL", "SQL", "Migrations"],
+    source: "whatIDo[1] + skills[4]",
+  },
+  {
+    title: "AI automation",
+    body: "Automating real operational work with the Claude API: prompt design, workflow automation, and the judgement to know what not to automate.",
+    tags: ["Claude API", "Prompt design", "Workflows"],
+    source: "skills[2] + experience[0].bullets",
+  },
+  {
+    title: "ML services",
+    body: "A Python/FastAPI microservice that forecasts staffing demand, so scheduling can be planned against expected load rather than guessed.",
+    tags: ["Python", "FastAPI", "Forecasting"],
+    source: "skills[2] + workforceiq.features",
+  },
+  {
+    title: "Documentation & incident handling",
+    body: "Writing incidents down so the next person does not start from zero, and running preventive maintenance before it becomes an incident.",
+    tags: ["Runbooks", "Incidents", "Maintenance"],
+    source: "skills[4] + experience[1].bullets",
+  },
+];
+
+/**
+ * WAYS OF WORKING.
+ *
+ * This is the "how do we work together" slot. It is NOT a services or pricing
+ * section and must not become one: asked directly what he wanted to offer,
+ * Pratham selected full-time employment only — no freelance builds, no retail
+ * packages. Every mode here is read straight out of `identity.availability`
+ * ("Dubai, UAE · Surat, India · open to on-site, hybrid, remote").
+ *
+ * If that ever changes, change `identity` first and let this follow.
+ */
+export const waysOfWorking = [
+  {
+    mode: "On-site",
+    body: "In the building, on the floor, hands on the hardware. How the L1/L2 work has always been done.",
+  },
+  {
+    mode: "Hybrid",
+    body: "On-site for the infrastructure that needs a person in the room, remote for the software layer.",
+  },
+  {
+    mode: "Remote",
+    body: "Full-stack and AI automation work, delivered against a real backlog with real deadlines.",
+  },
+];
+
+/**
+ * PROJECT REGISTRY.
+ *
+ * The "selected work" surface reads from here rather than from JSX, so adding a
+ * project is a data edit. Two entries, and the constraint that keeps it at two
+ * is documented rather than implied:
+ *
+ *  - WifiPlus, Cost-Crafting-Restaurant- and AI-Agent are deliberately ABSENT.
+ *    §10 Q7 is unanswered — no honest one-line description has been supplied for
+ *    them. `footer.tsx` links wifiplus.prathamgosai.in separately; that link is
+ *    a fact (the site exists), a project card would be a claim about what it is.
+ *  - `learningInPublic` stays a separate array on purpose. §1: study repos are
+ *    NEVER presented as original work, and the way to guarantee that is to keep
+ *    them out of the structure that renders "work".
+ *
+ * `caseStudy` is null when no deep write-up exists. A null must render as an
+ * absent link, never as a dead one.
+ */
+export type Project = {
+  slug: string;
+  name: string;
+  year: string;
+  category: string;
+  tagline: string;
+  stack: string[];
+  /** Internal case-study route, or null when none exists yet. */
+  caseStudy: string | null;
+  repo: string | null;
+  live: string | null;
+};
+
+export const projects: Project[] = [
+  {
+    slug: workforceiq.slug,
+    name: workforceiq.name,
+    year: "2026",
+    category: "Workforce platform",
+    tagline: workforceiq.tagline,
+    stack: workforceiq.stack.slice(0, 6),
+    caseStudy: `/projects/${workforceiq.slug}`,
+    repo: workforceiq.repo,
+    live: workforceiq.demoUrl,
+  },
+  {
+    slug: "portfolio",
+    name: "This site",
+    year: "2026",
+    category: "Personal site",
+    tagline:
+      "The site you are reading. Next.js App Router, a hand-built design system on Tailwind v4 tokens, dual themes checked to WCAG AA, a strict Content-Security-Policy, and no animation library.",
+    stack: ["TypeScript", "Next.js", "React", "Tailwind CSS", "CSS", "Vercel Analytics"],
+    caseStudy: null,
+    repo: null,
+    live: SITE_URL,
+  },
+];

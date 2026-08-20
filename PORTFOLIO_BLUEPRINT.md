@@ -68,6 +68,18 @@ navigation, and not part of this blueprint.
 - **No animation library** — CSS plus a small `IntersectionObserver`. Motion is a
   refinement, so it is gated on `prefers-reduced-motion` and on JS being
   available at all.
+- **One exception: `lenis`** (~5.5 kB gz), for smooth wheel scrolling. It is the
+  only runtime dependency added for presentation, and it earns the exception by
+  not being an animation library in the sense meant above: it does not own any
+  element's motion, it changes how the *page* scrolls. Everything animated is
+  still CSS reacting to state that an observer sets.
+  It is also fenced. `<SmoothScroll/>` lazy-imports it, and only after passing
+  two media-query gates — `(pointer: fine)` and `prefers-reduced-motion:
+  no-preference` — so touch devices and anyone who has asked for less motion
+  never download it at all. Both gates are live; flipping the OS setting
+  mid-session creates or destroys the instance.
+  If a future change makes something else depend on Lenis for its animation,
+  that is the signal the exception has stopped holding.
 - Semantic design tokens; both themes contrast-checked to WCAG AA.
 - Static-first: every route prerenders at build time.
 - Security headers including a CSP ship from `next.config.ts`.

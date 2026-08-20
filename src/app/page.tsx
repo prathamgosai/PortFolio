@@ -1,17 +1,48 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Section, ChipRow, ButtonLink, CTABlock, Card, CardGrid } from "@/components/ui";
+import { ArrowRight } from "lucide-react";
+import { Section } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { Hero } from "@/components/hero";
 import { Faq } from "@/components/faq";
 import { Testimonials } from "@/components/testimonials";
 import { SystemBento } from "@/components/system-bento";
+import { AboutTeaser } from "@/components/about-teaser";
+import { Journey } from "@/components/journey";
+import { SelectedWork } from "@/components/selected-work";
+import { Capabilities } from "@/components/capabilities";
 import { TechStack } from "@/components/tech-stack";
+import { FinalCta } from "@/components/final-cta";
 import { PersonJsonLd } from "@/components/person-jsonld";
 import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
-import { experience, identity, workforceiq } from "@/data/portfolio";
+import { experience } from "@/data/portfolio";
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ * HOME — one long editorial scroll.
+ * ─────────────────────────────────────────────────────────────
+ *
+ * The order is an argument, and each beat exists because the one before it
+ * raises a question:
+ *
+ *   Hero            the claim
+ *   SystemBento     the numbers behind it            → "says who?"
+ *   AboutTeaser     who is making the claim          → "how did you get here?"
+ *   Journey         the dated route                  → "so what have you built?"
+ *   SelectedWork    the shipped thing                → "what else can you do?"
+ *   Capabilities    the full scope + how to engage   → "with what?"
+ *   TechStack       the tools
+ *   Experience      where the work happened
+ *   Writing         evidence of thinking, not just doing
+ *   Testimonials    self-hiding until real quotes exist
+ *   FAQ             the objections
+ *   FinalCta        the ask
+ *
+ * Sections carry `id`s and `scroll-mt-28` so the nav can anchor into them. The
+ * anchors are deliberately native — Lenis's own anchor handling is disabled
+ * (see smooth-scroll.tsx), so `scroll-margin-top` is what clears the fixed
+ * navbar, and it does so with JS off and under reduced motion too.
+ */
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 2);
 
@@ -22,69 +53,18 @@ export default function HomePage() {
 
       <Hero />
 
-      {/**
-       * Overview bento.
-       *
-       * This one grid absorbs what used to be three consecutive full-width
-       * strips — <StatBar/>, <CertTrust/> and the "What I do" card grid — each
-       * of which made the same kind of claim at the same visual weight, one
-       * after another, for roughly three screens of scroll. The bento ranks them
-       * by tile size instead of by scroll order, which is both shorter and
-       * legible before anything is read. Rationale in system-bento.tsx.
-       */}
+      {/* Proof — status, the four approved numbers, certifications. */}
       <SystemBento />
 
-      {/* Tech stack */}
-      <TechStack />
+      <AboutTeaser />
 
-      {/**
-       * Featured work — the single heaviest element on the page.
-       *
-       * This card used to be styled identically to a tech-stack tile: same
-       * radius, same padding, same weight. The one project the whole site is
-       * built to sell had no more visual authority than a list of framework
-       * names. It now gets `tone="feature"` (deeper padding, an amber ring),
-       * `space="loose"` around it, and a headline treatment of its own.
-       */}
-      <Section label="Featured work" labelTone="signal" title="WorkforceIQ" space="loose">
-        <Reveal>
-          <Card tone="feature" as="article" className="mt-8">
-            <div className="relative z-[1] grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-              <div>
-                <p className="t-body text-fg/90">{workforceiq.tagline}</p>
-                <ul className="mt-7 space-y-3.5">
-                  {workforceiq.outcomes.map((outcome) => (
-                    <li key={outcome} className="flex gap-3 t-small text-fg">
-                      <span aria-hidden className="mt-2.5 h-px w-3.5 shrink-0 bg-accent" />
-                      <span>{outcome}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <ButtonLink href={`/projects/${workforceiq.slug}`}>
-                    Read the case study
-                    <ArrowRight className="h-4 w-4" />
-                  </ButtonLink>
-                  <ButtonLink href={workforceiq.repo} variant="secondary" external>
-                    View repo
-                    <ArrowUpRight className="h-4 w-4" />
-                  </ButtonLink>
-                </div>
-              </div>
-              <div className="border-t border-hairline pt-7 lg:border-l lg:border-t-0 lg:pl-9 lg:pt-0">
-                <p className="label">Stack</p>
-                <div className="mt-3">
-                  <ChipRow items={workforceiq.stack} />
-                </div>
-                <p className="label mt-7">Built</p>
-                <p className="t-small mt-2 text-muted">
-                  {workforceiq.period} · at {workforceiq.builtAt}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </Reveal>
-      </Section>
+      <Journey />
+
+      <SelectedWork />
+
+      <Capabilities />
+
+      <TechStack />
 
       {/* Experience preview */}
       <Section label="Experience" title="Where I've done the work.">
@@ -111,33 +91,23 @@ export default function HomePage() {
       {/* Latest writing */}
       {posts.length > 0 ? (
         <Section label="Writing" title="Latest posts">
-          <CardGrid cols={2} className="mt-10">
+          <ul className="write-list mt-10">
             {posts.map((post, i) => (
-              <Reveal key={post.slug} delay={i * 0.05}>
-                {/* Stretched-link card: the anchor stays on the title (so its
-                    accessible name is the post title, not "read more"), and its
-                    ::after covers the panel to make the whole card clickable. */}
-                <Card as="article" className="group h-full">
-                  <div className="relative z-[1]">
-                    <p className="label">{post.date}</p>
-                    <h3 className="t-card-title mt-3 text-fg transition-colors group-hover:text-accent-ink">
-                      <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
-                        {post.title}
-                      </Link>
-                    </h3>
-                    <p className="t-small mt-3 text-muted">{post.excerpt}</p>
-                    <span className="mt-5 inline-flex items-center gap-1.5 t-small font-semibold text-link">
-                      Read post
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </span>
-                  </div>
-                </Card>
+              <Reveal key={post.slug} as="li" delay={i * 0.05} className="write-row">
+                <p className="label">{post.date}</p>
+                <h3 className="t-card-title mt-2.5 text-fg">
+                  {/* Stretched link: the accessible name stays the post title. */}
+                  <Link href={`/blog/${post.slug}`} className="write-row__link">
+                    {post.title}
+                  </Link>
+                </h3>
+                <p className="t-small measure mt-3 text-muted">{post.excerpt}</p>
               </Reveal>
             ))}
-          </CardGrid>
+          </ul>
           <Link
             href="/blog"
-            className="mt-7 inline-flex items-center gap-1.5 t-small font-semibold text-link hover:underline"
+            className="mt-8 inline-flex items-center gap-1.5 t-small font-semibold text-link hover:underline"
           >
             All posts
             <ArrowRight className="h-4 w-4" />
@@ -153,31 +123,7 @@ export default function HomePage() {
         <Faq />
       </Section>
 
-      {/* Contact CTA */}
-      <Section space="loose">
-        <CTABlock
-          title="Looking for someone who can build it and keep it running?"
-          body={`I'm in ${identity.locationShort} and open to on-site, hybrid, or remote roles. I reply fastest on email and LinkedIn.`}
-        >
-          {identity.email ? (
-            <ButtonLink href={`mailto:${identity.email}`} external>
-              Email me
-            </ButtonLink>
-          ) : null}
-          <ButtonLink href={identity.linkedin} variant={identity.email ? "secondary" : "primary"} external>
-            LinkedIn
-            <ArrowUpRight className="h-4 w-4" />
-          </ButtonLink>
-          <ButtonLink href={identity.github} variant="secondary" external>
-            GitHub
-            <ArrowUpRight className="h-4 w-4" />
-          </ButtonLink>
-          <ButtonLink href={identity.instagram} variant="secondary" external>
-            Instagram
-            <ArrowUpRight className="h-4 w-4" />
-          </ButtonLink>
-        </CTABlock>
-      </Section>
+      <FinalCta />
     </>
   );
 }

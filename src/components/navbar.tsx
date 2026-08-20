@@ -9,14 +9,29 @@ import { OPEN_COMMAND_PALETTE } from "@/components/command-palette";
 import { LanguagePicker } from "@/components/language-picker";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { identity } from "@/data/portfolio";
+import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
 
+/**
+ * Anchor entries point at `/#id`, not `#id`. That matters on every page that is
+ * not the homepage: a bare hash would look for the section on the current page
+ * and silently do nothing, whereas `/#journey` navigates home and then anchors.
+ *
+ * `desktop: false` keeps an item out of the floating pill while leaving it in
+ * the fullscreen mobile menu. The pill has room for five before it starts
+ * crowding the wordmark; the mobile menu has a whole screen, so it carries the
+ * complete set rather than a truncated one.
+ */
 const NAV = [
   { href: "/about", label: "About" },
-  { href: "/projects", label: "Projects" },
+  { href: "/projects", label: "Work" },
+  { href: "/#journey", label: "Journey" },
+  { href: "/#capabilities", label: "Capabilities", desktop: false },
   { href: "/experience", label: "Experience" },
   { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+  { href: "/contact", label: "Contact", desktop: false },
 ];
+
+const DESKTOP_NAV = NAV.filter((item) => item.desktop !== false);
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -46,7 +61,14 @@ export function Navbar() {
   const menuRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  /**
+   * Anchors are excluded outright. `/#journey` is a location on a page, not a
+   * page, so marking it aria-current="page" would tell a screen reader the user
+   * is on a different page than they are — and the visual pill would light up a
+   * second item alongside the real current route.
+   */
+  const isActive = (href: string) =>
+    !href.includes("#") && (pathname === href || pathname.startsWith(`${href}/`));
 
   // Hide on scroll down, reveal on scroll up — but never hide near the top, and
   // never while the mobile menu is open. rAF-throttled, passive, one listener.
@@ -105,9 +127,16 @@ export function Navbar() {
     document.addEventListener("keydown", onKey);
     // Capture phase, so a link inside the menu still gets its own click first.
     document.addEventListener("pointerdown", onPointerDown, true);
+    /**
+     * The menu is fullscreen now, so the page behind it must not scroll. This
+     * also stops Lenis — `overflow: hidden` on <body> does not, because Lenis
+     * scrolls programmatically off its own wheel listener.
+     */
+    lockScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onPointerDown, true);
+      unlockScroll();
     };
   }, [open]);
 
@@ -125,9 +154,16 @@ export function Navbar() {
       data-hidden={hidden && !reduce}
       className="site-header pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col items-center px-4 pt-3"
     >
+      {/**
+       * `relative z-40` is load-bearing. <header> is z-50 and therefore its own
+       * stacking context; inside it, the fullscreen menu below carries z-30.
+       * Without an explicit z here the pill would be z-auto and the menu would
+       * paint over it — taking the close button with it, leaving the menu
+       * dismissable only by Escape. On a phone, that means not at all.
+       */}
       <nav
         aria-label="Main"
-        className="glass pointer-events-auto flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)] lg:max-w-5xl"
+        className="glass pointer-events-auto relative z-40 flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)] lg:max-w-5xl"
       >
         {/**
          * Full legal name as the wordmark, per an explicit request.
@@ -151,7 +187,7 @@ export function Navbar() {
         </Link>
 
         <div className="relative z-[1] hidden flex-1 items-center justify-center gap-0.5 md:flex">
-          {NAV.map((item) => {
+          {DESKTOP_NAV.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
@@ -207,53 +243,101 @@ export function Navbar() {
         </div>
       </nav>
 
+      {/**
+       * FULLSCREEN MOBILE MENU.
+       *
+       * Was a small dropdown panel hanging off the pill. Fullscreen is not a
+       * style change — a dropdown over live content invites a tap on whatever
+       * is behind it, and on a page this long it also left the menu floating
+       * over a moving background. Covering the viewport makes the menu the only
+       * thing on screen, which is what it should be.
+       *
+       * `hidden` is what keeps it out of the tab order and the accessibility
+       * tree while closed; the CSS transition alone would leave every link
+       * focusable behind an invisible overlay.
+       *
+       * The stagger is an inline `transitionDelay` per item rather than a
+       * keyframe animation, so closing reverses cleanly instead of replaying
+       * the entrance backwards.
+       */}
       <nav
         ref={menuRef}
         id="mobile-nav"
         aria-label="Mobile"
         data-open={open}
         hidden={!open}
-        /* top offset tracks the single bar above it: pt-3 (0.75rem) + the pill's
-           own ~3rem height + a 0.5rem gap. It was 6.25rem while the promo bar
-           existed; leaving it there would have floated the menu detached. */
-        className="mobile-nav glass pointer-events-auto absolute left-4 right-4 top-[4.25rem] z-40 overflow-hidden rounded-3xl p-2 shadow-[var(--shadow-lg)] md:hidden"
+        className="mobile-sheet pointer-events-auto fixed inset-0 z-30 flex flex-col bg-bg px-6 pb-8 pt-24 md:hidden"
       >
-        <ul className="relative z-[1]">
-          {NAV.map((item) => (
-            <li key={item.href}>
+        <ul className="flex flex-col">
+          {NAV.map((item, i) => (
+            <li
+              key={item.href}
+              className="mobile-sheet__item border-b border-hairline"
+              style={{ transitionDelay: `${0.04 + i * 0.035}s` }}
+            >
               <Link
                 href={item.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`block rounded-2xl px-4 py-3 text-[1.0625rem] font-medium transition-colors ${
-                  isActive(item.href) ? "bg-wash text-fg" : "text-muted hover:text-fg"
+                className={`flex items-baseline gap-4 py-4 font-display text-3xl font-bold tracking-tight transition-colors ${
+                  isActive(item.href) ? "text-fg" : "text-muted"
                 }`}
               >
+                <span aria-hidden className="font-mono text-[0.6875rem] font-medium tracking-widest text-muted">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 {item.label}
               </Link>
             </li>
           ))}
-          <li className="mt-1 flex items-center gap-2 px-2 pb-1 pt-2">
+        </ul>
+
+        <div
+          className="mobile-sheet__item mt-auto pt-8"
+          style={{ transitionDelay: `${0.04 + NAV.length * 0.035}s` }}
+        >
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
                 setOpen(false);
                 openPalette();
               }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-hairline py-2.5 text-sm text-muted"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-hairline py-3 text-sm text-muted"
             >
               <Command className="h-3.5 w-3.5" /> Command menu
             </button>
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
-              className="flex-1 rounded-2xl bg-fg py-2.5 text-center text-sm font-semibold text-bg"
+              className="flex-1 rounded-2xl bg-fg py-3 text-center text-sm font-semibold text-bg"
             >
               Hire me
             </Link>
-          </li>
-        </ul>
+          </div>
+
+          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+            {[
+              { href: identity.github, label: "GitHub" },
+              { href: identity.linkedin, label: "LinkedIn" },
+              { href: identity.instagram, label: "Instagram" },
+            ].map((social) => (
+              <li key={social.label}>
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="label text-[0.6875rem] hover:text-fg"
+                >
+                  {social.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="t-caption mt-4 text-muted">{identity.availability}</p>
+        </div>
       </nav>
+
     </header>
   );
 }

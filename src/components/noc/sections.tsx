@@ -44,7 +44,7 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex min-h-[100svh] max-w-6xl items-center px-4 pb-16 pt-28 sm:px-6">
       <Glass accent="cyan" tilt maxTilt={5} lift={false} className="w-full px-6 py-10 sm:px-10 sm:py-14">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.35fr_1fr]">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.35fr_1fr]">
           <div>
             <p className="mono flex items-center gap-2 text-[12px] text-[#00ff88]">
               <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-[#00ff88]" />
@@ -236,7 +236,7 @@ export function Layer2() {
 
       <Settle>
         <Glass accent="green" tilt maxTilt={4} lift={false} className="px-6 py-9 sm:px-10">
-          <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr]">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <h2 className="etched text-[clamp(1.6rem,3vw,2.3rem)] font-bold tracking-tight text-[#e2e8f0]">
                 {workforceiq.name}
@@ -445,7 +445,7 @@ export function Layer5({ posts }: { posts: PostMeta[] }) {
       <Cmd>{`tail -n ${posts.length} blog.log`}</Cmd>
 
       <Settle>
-        <Glass accent="cyan" lift={false} className="fiber max-h-[34rem] overflow-y-auto px-6 py-7">
+        <Glass accent="cyan" lift={false} scrollable className="fiber max-h-[34rem] overflow-y-auto px-6 py-7">
           <ul className="space-y-3">
             {posts.map((post) => (
               <li key={post.slug}>

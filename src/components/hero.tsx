@@ -48,7 +48,7 @@ export function Hero() {
       <div aria-hidden className="hero-orb hero-orb--1" />
       <div aria-hidden className="hero-orb hero-orb--2" />
 
-      <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
         {/* ── Text column ── */}
         <div>
           <div className="hero-in" style={step(0)}>

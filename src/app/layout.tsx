@@ -6,8 +6,10 @@ import { Footer } from "@/components/footer";
 import { ServiceWorkerCleanup } from "@/components/sw-cleanup";
 import { PremiumInteractions } from "@/components/premium-interactions";
 import { ScrollProgress } from "@/components/scroll-progress";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import { Ambient } from "@/components/ambient";
 import { CursorSpotlight } from "@/components/cursor-spotlight";
+import { CustomCursor } from "@/components/custom-cursor";
 import { CommandPalette } from "@/components/command-palette";
 import { Analytics } from "@vercel/analytics/react";
 import { SITE_URL, identity } from "@/data/portfolio";
@@ -122,15 +124,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${jakarta.variable} ${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${spaceGrotesk.variable} ${plexMono.variable} antialiased`}
     >
-      <body className="min-h-full bg-bg font-sans text-fg antialiased">
+      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
         <Ambient />
         <CursorSpotlight />
+        <CustomCursor />
         <ServiceWorkerCleanup />
         <ScrollProgress />
+        <SmoothScroll />
         <PremiumInteractions />
         <ThemeProvider>
           <a

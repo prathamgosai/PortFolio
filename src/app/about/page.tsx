@@ -28,7 +28,7 @@ export default function AboutPage() {
         ]}
       />
       <Section label="About" title="From the server room to production software." titleAs="h1">
-        <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="post">
             <p>
               I started in the server room. Desktops, laptops, printers, the LAN and WAN they sit on, firewall rules,

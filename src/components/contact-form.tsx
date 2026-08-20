@@ -219,7 +219,16 @@ export function ContactForm() {
   const submitting = status === "submitting";
 
   return (
-    <form onSubmit={onSubmit} className="glass rounded-3xl p-6 sm:p-8">
+    /**
+     * `min-w-0` because this form is a grid item, and grid items default to
+     * `min-width: auto` — they refuse to shrink below their content's
+     * min-content width. The <textarea> inside contributes a cols-based
+     * min-content of ~289px, so without this the single mobile grid track was
+     * sized to 338px inside a 280px container and the whole page scrolled
+     * sideways at 320px. Setting `min-width: 0` on the controls alone does not
+     * fix it; the item that owns the track has to opt out too.
+     */
+    <form onSubmit={onSubmit} className="glass min-w-0 rounded-3xl p-6 sm:p-8">
       <div className="relative z-[1] flex flex-col gap-4">
         {/* Honeypot — visually hidden, off the a11y tree, and named so that no
             autofill heuristic will ever put a real value in it. */}

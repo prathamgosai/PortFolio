@@ -41,7 +41,7 @@ export default function ContactPage() {
           { name: "Contact", path: "/contact" },
         ]}
       />
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+      <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-start">
         {/* Left — the form */}
         <ContactForm />
 

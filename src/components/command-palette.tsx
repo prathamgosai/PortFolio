@@ -17,6 +17,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { identity } from "@/data/portfolio";
+import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
 
 export const OPEN_COMMAND_PALETTE = "open-command-palette";
 
@@ -145,11 +146,13 @@ export function CommandPalette() {
     }
     returnFocusTo.current = document.activeElement as HTMLElement | null;
 
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Ref-counted, and it also stops Lenis. `overflow: hidden` alone does NOT
+    // stop Lenis — it listens for wheel events and scrolls programmatically, so
+    // the page would keep gliding behind the open palette.
+    lockScroll();
     const t = setTimeout(() => inputRef.current?.focus(), 20);
     return () => {
-      document.body.style.overflow = prev;
+      unlockScroll();
       clearTimeout(t);
     };
   }, [open]);
@@ -240,7 +243,13 @@ export function CommandPalette() {
           />
         </div>
 
-        <div ref={listRef} className="relative z-[1] max-h-[52vh] overflow-y-auto p-2">
+        <div
+          ref={listRef}
+          /* Without this the wheel does nothing here: Lenis preventDefault()s
+             wheel events while stopped, so a nested scroller has to opt out. */
+          data-lenis-prevent
+          className="relative z-[1] max-h-[52vh] overflow-y-auto p-2"
+        >
           <div id="cmdk-listbox" role="listbox" aria-label="Commands">
             {filtered.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-muted">No matches.</p>

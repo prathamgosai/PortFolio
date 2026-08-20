@@ -8,7 +8,6 @@ import {
   experience,
   identity,
   stats,
-  whatIDo,
 } from "@/data/portfolio";
 
 /**
@@ -131,15 +130,6 @@ export function SystemBento() {
             <p className="depth-1 mt-2 border-t border-hairline pt-2.5 font-mono text-[0.6875rem] leading-snug text-muted">
               {stat.note}
             </p>
-          </BentoTile>
-        ))}
-
-        {/* ── 3. What I do ── */}
-        {whatIDo.map((item, i) => (
-          <BentoTile key={item.title} span="third" pad="loose" as="article" className="flex flex-col">
-            <span aria-hidden className={`depth-1 block h-0.5 w-7 rounded-full ${ACCENTS[i % 3].rule}`} />
-            <h3 className="depth-2 t-card-title mt-5 text-fg">{item.title}</h3>
-            <p className="depth-1 t-small mt-3.5 text-muted">{item.body}</p>
           </BentoTile>
         ))}
 

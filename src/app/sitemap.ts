@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/data/portfolio";
+import { SITE_URL, projects } from "@/data/portfolio";
 import { getAllPosts } from "@/lib/posts";
 
 /**
@@ -13,7 +13,6 @@ const PAGES_LAST_MODIFIED = new Date("2026-08-09");
 
 const ROUTES: { path: string; priority: number; changeFrequency: "monthly" | "yearly" }[] = [
   { path: "", priority: 1, changeFrequency: "monthly" },
-  { path: "/projects/workforceiq", priority: 0.9, changeFrequency: "yearly" },
   { path: "/projects", priority: 0.8, changeFrequency: "monthly" },
   { path: "/experience", priority: 0.8, changeFrequency: "monthly" },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },
@@ -21,8 +20,27 @@ const ROUTES: { path: string; priority: number; changeFrequency: "monthly" | "ye
   { path: "/blog", priority: 0.7, changeFrequency: "monthly" },
 ];
 
+/**
+ * Case-study URLs are DERIVED from the project registry rather than typed out
+ * here. `/projects/workforceiq` used to be a hardcoded string in this array, so
+ * the sitemap was one more place that had to be remembered when a project was
+ * added — and the failure mode is silent: a new case study simply never gets
+ * crawled, with nothing failing to warn you.
+ *
+ * `caseStudy` is null for projects that have no deep write-up, and those are
+ * filtered out. A sitemap entry pointing at a route that does not exist is
+ * worse than no entry at all.
+ */
+const CASE_STUDIES = projects
+  .filter((project) => project.caseStudy)
+  .map((project) => ({
+    path: project.caseStudy as string,
+    priority: 0.9,
+    changeFrequency: "yearly" as const,
+  }));
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ROUTES.map((route) => ({
+  const pages = [...ROUTES, ...CASE_STUDIES].map((route) => ({
     url: `${SITE_URL}${route.path}`,
     lastModified: PAGES_LAST_MODIFIED,
     changeFrequency: route.changeFrequency,

@@ -183,6 +183,46 @@ html {
   color-scheme: light;
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ * LENIS — inlined rather than `@import "lenis/dist/lenis.css"`.
+ * ─────────────────────────────────────────────────────────────
+ *
+ * Inlined for one specific reason, not for tidiness. Lenis's stylesheet ships
+ * `html.lenis, html.lenis body { height: auto }` UNLAYERED, and unlayered CSS
+ * beats anything inside `@layer` regardless of specificity — which in Tailwind
+ * v4 means it silently defeats the `h-full` / `min-h-full` utilities on <html>
+ * and <body>. The symptom is subtle and only shows on short pages (404, a stub
+ * post): <body>'s percentage min-height resolves against an indefinite height,
+ * so the footer rides up into the middle of the viewport.
+ *
+ * The fix is at the source — layout.tsx now uses `min-h-dvh` on <body> and no
+ * `h-full` on <html>, so `height: auto` is what we actually want anyway — but
+ * these rules are kept here where the interaction is visible rather than buried
+ * in node_modules. The `autoToggle` rule from the original file is deliberately
+ * omitted; that option is not enabled.
+ */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+/* `stop()` — used by the ref-counted scroll lock while an overlay is open. */
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+/**
+ * Opt an inner scroller out of Lenis. Required, not cosmetic: while Lenis is
+ * stopped it calls preventDefault() on wheel events, so any nested
+ * `overflow-y: auto` panel becomes unscrollable by wheel unless it carries
+ * `data-lenis-prevent`. The command palette's results list is the live example.
+ */
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 /* next-themes sets .dark on <html> itself. */
 html.dark {
   color-scheme: dark;
@@ -1740,3 +1780,863 @@ font {
 }
 
 } /* end @layer components */
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * CUSTOM CURSOR
+ *
+ * The element is always in the DOM; JS only sets data-attributes, exactly the
+ * pattern `.reveal` uses. That means no-JS visitors get a cursor that never
+ * appears and a native pointer that was never hidden — the `has-custom-cursor`
+ * class on <html> is added by the same code that arms the listeners, so the two
+ * can never disagree.
+ *
+ * The follow is a CSS transition on `translate`, not a JS lerp loop. Same
+ * visual result as the usual rAF interpolation, minus a permanent animation
+ * frame callback for the life of the page.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  opacity: 0;
+  /* `translate` as an independent property so the -50% centring composes with
+     the pointer position rather than having to be re-stated in one transform. */
+  translate: calc(var(--cx, 50vw) - 50%) calc(var(--cy, 50vh) - 50%);
+  transition:
+    width 0.28s var(--ease-out-quint),
+    height 0.28s var(--ease-out-quint),
+    background-color 0.28s var(--ease-out-quint),
+    opacity 0.2s linear,
+    translate 0.08s linear,
+    scale 0.12s var(--ease-out-quint);
+}
+.cursor-dot[data-visible] {
+  opacity: 1;
+}
+/* Expanded pill carrying a word — "View", "Open", "Explore". */
+.cursor-dot[data-labelled] {
+  width: 4.75rem;
+  height: 4.75rem;
+  background: color-mix(in srgb, var(--accent) 92%, transparent);
+}
+.cursor-dot[data-down] {
+  scale: 0.86;
+}
+.cursor-dot__label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* Always near-black: the dot is amber in both themes, so the label must not
+     flip with the theme or it loses contrast in one of them. */
+  color: #0f1620;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out-quint);
+  white-space: nowrap;
+}
+.cursor-dot[data-labelled] .cursor-dot__label {
+  opacity: 1;
+  transition-delay: 0.06s;
+}
+
+/**
+ * Hide the native cursor ONLY while ours is live. Scoped to the class rather
+ * than applied globally so that reduced-motion, touch and no-JS visitors keep
+ * a real pointer. Interactive elements are included deliberately — a native
+ * I-beam or hand appearing under the dot breaks the illusion — but text inputs
+ * are exempt, because losing the caret position indicator in a form field is a
+ * genuine usability cost, not a stylistic one.
+ */
+.has-custom-cursor,
+.has-custom-cursor a,
+.has-custom-cursor button,
+.has-custom-cursor [role="button"],
+.has-custom-cursor summary {
+  cursor: none;
+}
+.has-custom-cursor input,
+.has-custom-cursor textarea,
+.has-custom-cursor select {
+  cursor: auto;
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .cursor-dot {
+    display: none;
+  }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * JOURNEY TIMELINE
+ *
+ * Single column by default. Nothing here is ever horizontal at any width —
+ * see the note at the top of journey.tsx for why the pinned-horizontal
+ * pattern was rejected outright rather than made responsive.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+/**
+ * `minmax(0, 1fr)`, never a bare implicit `auto` track.
+ *
+ * A single-column grid with no declared template gets an implicit `auto` track,
+ * and an auto track is floored by its items' min-content contribution — which
+ * can exceed the container and push the whole PAGE into horizontal scroll, even
+ * when the content would happily wrap if simply given less room. Declaring a
+ * `minmax(0, 1fr)` track says "you may be narrower than your content wants",
+ * which is what every one of these layouts actually means. This is the same
+ * thing Tailwind's `grid-cols-1` emits, and why it is not redundant next to a
+ * `lg:grid-cols-[…]`.
+ */
+.journey-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+}
+
+.journey-aside {
+  display: none;
+}
+
+.journey-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* Grid items refuse to shrink below min-content unless told otherwise. */
+  min-width: 0;
+}
+
+.journey-step {
+  position: relative;
+  /* Cheap and safe. `content-visibility` would be tempting here and is a trap:
+     it breaks find-in-page and can fight view-timeline range calculation. */
+  contain: layout paint;
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--rule);
+  transition: border-color 0.45s var(--ease-out-quint);
+}
+.journey-step:first-child {
+  padding-top: 0;
+}
+.journey-step:last-child {
+  padding-bottom: 0;
+}
+
+/* The node on the rule. Scales rather than growing, so it never reflows. */
+.journey-step::before {
+  content: "";
+  position: absolute;
+  left: -0.3125rem;
+  top: clamp(2rem, 5vw, 3.5rem);
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 9999px;
+  background: var(--rule);
+  transition:
+    background-color 0.45s var(--ease-out-quint),
+    box-shadow 0.45s var(--ease-out-quint),
+    scale 0.45s var(--ease-out-quint);
+}
+.journey-step:first-child::before {
+  top: 0.5rem;
+}
+.journey-step[data-active]::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 18%, transparent);
+  scale: 1.15;
+}
+
+.journey-step__org {
+  color: var(--fg-muted);
+}
+
+/**
+ * `minmax(min(11rem, 100%), 1fr)`, not `minmax(11rem, 1fr)`.
+ *
+ * This is the auto-fit intrinsic-sizing trap, and it cost a real 105px of
+ * horizontal overflow at 320px. When a grid's own width is being resolved from
+ * its content, `repeat(auto-fit, minmax(11rem, 1fr))` contributes a min-content
+ * width of "enough tracks for every item" — two 11rem tracks plus the gap, i.e.
+ * a hard 376px floor — rather than collapsing to one column the way it does
+ * when the width is already known. Wrapping the minimum in `min(…, 100%)` lets
+ * the track shrink below 11rem when there is less than 11rem to give it, which
+ * is the only thing that makes auto-fit safe inside an auto-width ancestor.
+ */
+.journey-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 1rem 1.5rem;
+  max-width: 34rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--hairline);
+}
+
+/* ── Desktop: sticky aside beside a normal vertical list. ── */
+@media (min-width: 64rem) {
+  .journey-grid {
+    grid-template-columns: 14rem 1fr;
+    gap: 4rem;
+  }
+  .journey-aside {
+    display: block;
+  }
+  .journey-sticky {
+    position: sticky;
+    /* Clears the floating navbar. */
+    top: 9rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    align-items: start;
+    height: max-content;
+  }
+  .journey-rail {
+    width: 2px;
+    height: 9rem;
+    border-radius: 1px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .journey-rail-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: top;
+    /* JS-fallback path; the @supports block below hands this to the compositor
+       wherever scroll-driven CSS animations exist. */
+    transform: scaleY(var(--journey-progress, 0));
+    background: linear-gradient(to bottom, var(--cable), var(--accent));
+    will-change: transform;
+  }
+  .journey-year {
+    font-size: clamp(1.75rem, 2.4vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/**
+ * Active-state treatment.
+ *
+ * Gated on `scripting: enabled` for the same reason `.reveal` is: `data-active`
+ * is only ever added by script, so without this gate a JS-disabled visitor or a
+ * crawler would see every entry dimmed forever, waiting on an observer that is
+ * never going to run.
+ *
+ * 0.62 is a floor, not a taste call. Inactive entries still have to clear WCAG
+ * 1.4.3 on their own — this is a de-emphasis, not a hide, and it must never
+ * become `opacity: 0` / `visibility: hidden`, both of which would also break
+ * browser find-in-page across the whole timeline.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .journey-step {
+    opacity: 0.62;
+    transition:
+      opacity 0.45s var(--ease-out-quint),
+      border-color 0.45s var(--ease-out-quint);
+  }
+  .journey-step[data-active] {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+}
+
+/**
+ * Progressive enhancement: hand the rail to the compositor where the browser
+ * supports scroll-driven animations. `timeline-scope` is what lets the fill —
+ * which lives in the sticky aside, not inside the list — consume a timeline
+ * declared on the list itself.
+ *
+ * `contain` (not `cover`) is the correct range because the list is taller than
+ * the viewport. If the journey ever shrinks below ~3 entries the contain range
+ * collapses to zero and the rail will not fill; use `cover` then.
+ */
+@supports (animation-timeline: view()) {
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    .journey {
+      timeline-scope: --journey;
+    }
+    .journey-steps {
+      view-timeline: --journey block;
+    }
+    .journey-rail-fill {
+      transform: none;
+      animation: journey-fill linear both;
+      animation-timeline: --journey;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
+@keyframes journey-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/**
+ * Reduced motion → a plain static vertical list.
+ *
+ * The global reduced-motion block crushes transition and animation durations,
+ * but it does NOT neutralise `position: sticky` or an opacity of 0.62 — both
+ * need saying explicitly. Un-sticking matters most: pinning an element while
+ * the page moves past it is itself a vestibular trigger, which is the whole
+ * category this setting exists to suppress.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .journey-sticky {
+    position: static;
+  }
+  .journey-step {
+    opacity: 1;
+  }
+  .journey-rail-fill {
+    animation: none;
+    transform: scaleY(1);
+  }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * SELECTED WORK — editorial rows
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+.work-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.work-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 1.25rem;
+  align-items: start;
+  padding: clamp(2rem, 5vw, 3.25rem) 0;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color 0.4s var(--ease-out-quint);
+}
+
+/**
+ * The hover wash is a pseudo-element bled past the row's own box, so the
+ * highlight reads as a full-bleed band rather than a rectangle that stops at the
+ * text. Negative insets rather than padding, so hovering cannot reflow the row.
+ */
+.work-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 -1.25rem;
+  z-index: 0;
+  border-radius: 1rem;
+  background: var(--wash);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out-quint);
+  pointer-events: none;
+}
+.work-row:hover::before,
+.work-row:focus-within::before {
+  opacity: 1;
+}
+.work-row:hover,
+.work-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.work-row > * {
+  position: relative;
+  z-index: 1;
+}
+
+.work-row__index {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--fg-muted);
+  padding-top: 0.5rem;
+  transition: color 0.4s var(--ease-out-quint);
+}
+.work-row:hover .work-row__index {
+  color: var(--accent-ink);
+}
+
+.work-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+}
+
+.work-row__title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  /* Big, but it has to fit a long project name at 320px without clipping. */
+  font-size: clamp(1.75rem, 1.1rem + 3vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+/* Stretched link — the whole row is the target, the title is the name. */
+.work-row__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 1rem;
+}
+.work-row__link {
+  transition: color 0.3s var(--ease-out-quint);
+}
+.work-row:hover .work-row__link {
+  color: var(--accent-ink);
+}
+
+.work-row__meta {
+  white-space: nowrap;
+}
+
+.work-row__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.work-row__cta {
+  grid-column: 2;
+  padding-top: 1.5rem;
+  color: var(--fg-muted);
+  transition:
+    transform 0.4s var(--ease-out-quint),
+    color 0.4s var(--ease-out-quint);
+}
+.work-row:hover .work-row__cta {
+  color: var(--accent-ink);
+  transform: translateX(6px);
+}
+
+@media (min-width: 48rem) {
+  .work-row {
+    grid-template-columns: 3.5rem 1fr auto;
+  }
+  .work-row__cta {
+    grid-column: 3;
+    padding-top: 0.5rem;
+    align-self: start;
+  }
+}
+
+/* ── Study repos — quieter by construction, never styled as shipped work. ── */
+.study-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+@media (min-width: 48rem) {
+  .study-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.study-row {
+  position: relative;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  transition: border-color 0.3s ease;
+}
+.study-row:hover {
+  border-color: var(--hairline-strong);
+}
+.study-row__link {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  transition: color 0.3s ease;
+}
+.study-row:hover .study-row__link {
+  color: var(--accent-ink);
+}
+.study-row__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * CAPABILITIES
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+.cap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.cap-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem 1.25rem;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.cap-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 -1.25rem;
+  z-index: 0;
+  border-radius: 0.875rem;
+  background: var(--wash);
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-out-quint);
+  pointer-events: none;
+}
+.cap-row:hover::before {
+  opacity: 1;
+}
+.cap-row > * {
+  position: relative;
+  z-index: 1;
+}
+
+/**
+ * A left rule that grows on hover. `scaleY` from the centre rather than an
+ * animated height — height would lay out, this composites.
+ */
+.cap-row::after {
+  content: "";
+  position: absolute;
+  left: -1.25rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.35s var(--ease-out-quint);
+  z-index: 1;
+}
+.cap-row:hover::after {
+  transform: scaleY(1);
+}
+
+.cap-row__index {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--fg-muted);
+  padding-top: 0.35rem;
+}
+
+.cap-row__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  grid-column: 2;
+}
+
+@media (min-width: 64rem) {
+  .cap-row {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 16rem;
+    align-items: start;
+  }
+  .cap-row__tags {
+    grid-column: 3;
+    justify-content: flex-end;
+    text-align: right;
+    padding-top: 0.35rem;
+  }
+}
+
+/* ── Ways of working ── */
+.ways-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.875rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 48rem) {
+  .ways-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * ABOUT TEASER + FINAL CTA — the two full-bleed statements.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+.statement {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  /* Caps at 96px. The hero caps at 76px and this must not out-shout it; the
+     extra size is bought by these lines being short, not by them being louder. */
+  font-size: clamp(2.5rem, 1.2rem + 5.6vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.statement-lines {
+  display: grid;
+  gap: 0.1em;
+}
+
+/**
+ * Line-by-line mask reveal. Each line sits in its own clipping box and slides
+ * up into it, which is the one text effect worth doing here — it reads as
+ * typesetting rather than as animation.
+ *
+ * Gated on `scripting: enabled` for the reason documented on `.reveal`: the
+ * start state is hidden, so with JS off (or for a crawler) the gate is what
+ * guarantees the words are simply visible rather than parked at translateY.
+ */
+.statement-line {
+  display: block;
+  overflow: hidden;
+}
+.statement-line > span {
+  display: block;
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .statement-line > span {
+    transform: translateY(105%);
+    transition: transform 0.85s var(--ease-out-quint);
+  }
+  .reveal[data-shown="true"] .statement-line > span,
+  [data-shown="true"] .statement-line > span {
+    transform: none;
+  }
+}
+
+/* About-teaser metadata + CTA channel rails. */
+.about-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-content: start;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+}
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  .about-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+}
+.about-meta > div {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--hairline);
+}
+.about-meta > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.cta-channels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+@media (min-width: 48rem) {
+  .cta-channels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.cta-channel {
+  position: relative;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color 0.3s ease;
+}
+@media (min-width: 48rem) {
+  .cta-channel {
+    padding-right: 1.5rem;
+  }
+}
+.cta-channel:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.cta-channel__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.cta-channel__link {
+  transition: color 0.3s ease;
+}
+.cta-channel:hover .cta-channel__link {
+  color: var(--accent-ink);
+}
+
+/* Writing list — editorial rows, matching the work/capability language. */
+.write-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.write-row {
+  position: relative;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color 0.35s var(--ease-out-quint);
+}
+.write-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 -1.25rem;
+  z-index: 0;
+  border-radius: 0.875rem;
+  background: var(--wash);
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-out-quint);
+  pointer-events: none;
+}
+.write-row:hover::before,
+.write-row:focus-within::before {
+  opacity: 1;
+}
+.write-row:hover,
+.write-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.write-row > * {
+  position: relative;
+  z-index: 1;
+}
+.write-row__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.875rem;
+}
+.write-row__link {
+  transition: color 0.3s var(--ease-out-quint);
+}
+.write-row:hover .write-row__link {
+  color: var(--accent-ink);
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * FULLSCREEN MOBILE MENU
+ *
+ * `hidden` (the attribute) is what actually removes this from the tab order and
+ * the accessibility tree while closed — the transition below only handles the
+ * look. Without it every link stays focusable behind an invisible overlay, and
+ * a keyboard user tabs into a menu they cannot see. Same rule as `.collapse`.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+.mobile-sheet {
+  transition:
+    opacity 0.3s var(--ease-out-quint),
+    visibility 0s linear 0.3s;
+}
+.mobile-sheet[data-open="false"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.mobile-sheet[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/**
+ * Per-item stagger. A `transitionDelay` set inline rather than a keyframe
+ * animation, because a keyframe would replay its entrance backwards on close;
+ * a transition simply reverses.
+ */
+.mobile-sheet__item {
+  transition:
+    opacity 0.4s var(--ease-out-quint),
+    transform 0.4s var(--ease-out-quint);
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .mobile-sheet[data-open="false"] .mobile-sheet__item {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.mobile-sheet[data-open="true"] .mobile-sheet__item {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sheet__item {
+    transition: none;
+    transform: none;
+  }
+}
+
+/**
+ * Grid children hold long unbroken strings (URLs, mono chip lists, display
+ * headings). A grid/flex item's default `min-width: auto` refuses to shrink
+ * below min-content, which turns any one of them into horizontal page overflow
+ * on a narrow screen. These opt out.
+ */
+.work-row__body,
+.cap-row__body,
+.journey-step {
+  min-width: 0;
+}
+
+/**
+ * Form controls carry an intrinsic minimum width from their legacy `size` /
+ * `cols` defaults — roughly 20 characters — and `width: 100%` does NOT override
+ * it, because the floor is `min-width: auto`, not `width`. The visible symptom
+ * is a `w-full` input that simply refuses to go below ~289px and pushes a
+ * 320px viewport into horizontal scrolling. This is the documented fix, and it
+ * belongs here rather than as a utility on each field: every control has the
+ * problem, so every control should have the cure.
+ */
+input,
+textarea,
+select {
+  min-width: 0;
+}
+
+/**
+ * Long unbroken strings — an email address, a credential ID, a repo URL — are
+ * the other reliable source of narrow-viewport overflow. `anywhere` rather than
+ * `break-word` so the break is allowed to count when the browser calculates
+ * min-content width, which is the whole point here.
+ */
+a[href^="mailto:"],
+.break-token {
+  overflow-wrap: anywhere;
+}
