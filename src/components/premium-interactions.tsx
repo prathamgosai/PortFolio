@@ -4,8 +4,11 @@ import { useEffect } from "react";
 
 /**
  * A single delegated pointer handler powering the "liquid glass" feel:
- *  • `.glass-hover` cards get a subtle 3D tilt + a cursor-following light
- *    reflection (via --rx/--ry/--gx/--gy CSS vars — the transform lives in CSS).
+ *  • Spatial surfaces — `.glass-hover` cards, `.bento-tile`s and the
+ *    `.portrait-card` — get a 3D tilt plus a cursor-following light reflection.
+ *    JS only writes CSS vars (--rx/--ry/--gx/--gy/--px/--py); every transform
+ *    lives in the stylesheet, so the motion can be redefined or switched off
+ *    entirely in CSS without touching this file.
  *  • `.magnetic` elements (buttons) drift a few px toward the cursor.
  *
  * Transform/opacity only (GPU, 60fps). One passive listener, rAF-throttled, with
@@ -13,6 +16,18 @@ import { useEffect } from "react";
  * Fully disabled under prefers-reduced-motion — and it reacts to the setting
  * changing mid-session.
  */
+
+/**
+ * Every surface that wants a pointer-driven tilt. One selector rather than one
+ * handler per surface language: the cost of this whole system is a single
+ * `closest()` per pointermove, and that cost does not grow when a new kind of
+ * card is added to the list.
+ */
+const TILT_SELECTOR = ".glass-hover, .bento-tile, .portrait-card";
+
+/** Default tilt amplitude in degrees; per-element override via `data-tilt`. */
+const TILT_DEG = 6;
+
 export function PremiumInteractions() {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -29,6 +44,8 @@ export function PremiumInteractions() {
       el.style.removeProperty("--ry");
       el.style.removeProperty("--gx");
       el.style.removeProperty("--gy");
+      el.style.removeProperty("--px");
+      el.style.removeProperty("--py");
     };
     const resetMag = (el: HTMLElement) => {
       el.style.transform = "";
@@ -38,7 +55,7 @@ export function PremiumInteractions() {
       lastX = e.clientX;
       lastY = e.clientY;
       const target = e.target as HTMLElement | null;
-      const nextCard = target?.closest<HTMLElement>(".glass-hover") ?? null;
+      const nextCard = target?.closest<HTMLElement>(TILT_SELECTOR) ?? null;
       const nextMag = target?.closest<HTMLElement>(".magnetic") ?? null;
 
       if (nextCard !== card) {
@@ -60,10 +77,17 @@ export function PremiumInteractions() {
         if (card && rCard) {
           const px = (lastX - rCard.left) / rCard.width;
           const py = (lastY - rCard.top) / rCard.height;
+          // `dataset` is a plain attribute read — no style recalc, so this is
+          // safe to do inside the frame alongside the geometry reads.
+          const amp = Number(card.dataset.tilt) || TILT_DEG;
           card.style.setProperty("--gx", `${px * 100}%`);
           card.style.setProperty("--gy", `${py * 100}%`);
-          card.style.setProperty("--ry", `${(px - 0.5) * 6}deg`);
-          card.style.setProperty("--rx", `${(0.5 - py) * 6}deg`);
+          card.style.setProperty("--ry", `${(px - 0.5) * amp}deg`);
+          card.style.setProperty("--rx", `${(0.5 - py) * amp}deg`);
+          // Normalised to -0.5…0.5 and unitless, so `.parallax` children can
+          // multiply it by their own travel budget in calc().
+          card.style.setProperty("--px", `${px - 0.5}`);
+          card.style.setProperty("--py", `${py - 0.5}`);
         }
         if (mag && rMag) {
           const dx = lastX - (rMag.left + rMag.width / 2);

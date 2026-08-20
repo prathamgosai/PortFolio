@@ -63,6 +63,45 @@
   --danger: #d94141;
   --danger-ink: #a32020;
   --danger-field: color-mix(in srgb, var(--danger) 10%, transparent);
+
+  /**
+   * PORTRAIT-HARMONISED PALETTE.
+   *
+   * These three are sampled from `public/pratham-portrait.jpeg`, and that is
+   * the whole point of them. A headshot dropped onto a page whose palette was
+   * chosen without reference to it always reads as pasted on — the photograph
+   * brings colours the design never agreed to, and the eye notices the seam
+   * even when it can't name it.
+   *
+   *   --studio  the neutral grey of the studio backdrop. Every "off-white"
+   *             surface on the light theme is mixed toward this rather than
+   *             toward pure white, so the page and the photograph share one
+   *             neutral instead of sitting a few degrees apart.
+   *   --coral   the shirt. It is the single saturated colour in the frame, so
+   *             it is now the palette's second warm stop: amber stays the
+   *             brand signal, coral appears often enough elsewhere (LEDs,
+   *             gradient tails, the portrait's floor glow) that the shirt
+   *             reads as part of the system rather than an accident.
+   *   --tech    the cool counterpoint. Nothing in the photo is cool except the
+   *             backdrop, which is exactly why this is the colour that makes
+   *             the composition feel engineered rather than merely warm.
+   *
+   * The `-ink` variants are the AA-safe text weights; the bare tokens are for
+   * rules, LEDs and glows only — same discipline as `--signal`/`--signal-ink`.
+   */
+  --studio: #ced3d9;
+  --coral: #dd6f7c;
+  --coral-ink: #a3384a;
+  --tech: #0e7f96;
+  --tech-ink: #0a6076;
+
+  /**
+   * The portrait mat — the dark surface the headshot is inset into. Deliberately
+   * near-black in BOTH themes: see the `.portrait-mat` block for why the light
+   * theme wants one dark object rather than a light frame around a grey photo.
+   */
+  --mat: #141c25;
+  --mat-deep: #0a1017;
 }
 
 /**
@@ -98,6 +137,15 @@
   --danger: #ff6b6b;
   --danger-ink: #ffa5a5; /* AA-safe red for text on the near-black canvas */
   --danger-field: rgba(255, 107, 107, 0.12);
+
+  /* Portrait palette, dark half. The hues are the same; only the lightness
+     flips so each still passes on its own canvas. --mat does NOT flip — the
+     portrait mat is the one surface that is dark in both themes. */
+  --studio: #232b36;
+  --coral: #ff8d99;
+  --coral-ink: #ffb4bc;
+  --tech: #4fd3ec;
+  --tech-ink: #7fe1f4;
 }
 
 @theme inline {
@@ -119,6 +167,12 @@
   --color-danger: var(--danger);
   --color-danger-ink: var(--danger-ink);
   --color-danger-field: var(--danger-field);
+  --color-studio: var(--studio);
+  --color-coral: var(--coral);
+  --color-coral-ink: var(--coral-ink);
+  --color-tech: var(--tech);
+  --color-tech-ink: var(--tech-ink);
+  --color-mat: var(--mat);
 
   --font-sans: var(--font-plex-sans);
   --font-display: var(--font-plex-condensed);
@@ -191,7 +245,11 @@ body::before {
   position: absolute;
   border-radius: 9999px;
   filter: blur(90px);
-  opacity: 0.26;
+  /* Pulled back from 0.26. The light theme is now carrying a precision grid
+     (`.tech-grid` below) and a page full of crisp bevelled tiles; at the old
+     intensity the warm wash sat on top of both and softened exactly the edges
+     that are meant to read as machined. Warm the page, don't tint it. */
+  opacity: 0.17;
   will-change: transform;
   mix-blend-mode: screen;
 }
@@ -222,6 +280,41 @@ body::before {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
   50% { transform: translate3d(-7vw, -5vh, 0) scale(1); }
 }
+/**
+ * PRECISION GRID — the light theme's structural backbone.
+ *
+ * A near-white minimalist page has a problem the dark theme doesn't: with the
+ * glow pulled back there is nothing in the background at all, and "minimal"
+ * collapses into "empty". The fix isn't more colour, it's ruling — a measured
+ * grid, masked to a soft vignette so it fades out before it reaches the edges
+ * and never competes with content sitting on top of it.
+ *
+ * 72px, not the 32px of `.blueprint-grid`. That one is a texture applied to a
+ * single panel; this one spans the viewport, and at 32px across 1440px it would
+ * be 45 lines of visual noise. At 72px it reads as drafting paper.
+ *
+ * Held at 4.5% ink — visible when you look for it, invisible when you're
+ * reading. It lives inside `.ambient` (which is already `fixed` and
+ * `contain: strict`) so it costs one more paint layer and no new stacking work.
+ */
+.tech-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--fg) 4.5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--fg) 4.5%, transparent) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 78% 62% at 50% 32%, #000 0%, transparent 76%);
+  -webkit-mask-image: radial-gradient(ellipse 78% 62% at 50% 32%, #000 0%, transparent 76%);
+}
+/* The dark canvas already has the orbs doing structural work, so the grid there
+   is a whisper — enough to catch the eye at the vignette edge, no more. */
+.dark .tech-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--fg) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--fg) 3%, transparent) 1px, transparent 1px);
+}
+
 /* Grain overlay to break up the gradients — the "film" texture. */
 .ambient-grain {
   position: absolute;
@@ -368,16 +461,30 @@ body::before {
   pointer-events: none;
   background: radial-gradient(34rem 28rem at var(--mx) var(--my), var(--glow), transparent 60%);
 }
-/* Decorative floating glass orbs. */
+/**
+ * Decorative floating glass orbs.
+ *
+ * On the dark canvas these are frosted discs catching the amber light — clearly
+ * decorative, clearly deliberate. On the light canvas `--glass` is 62% white
+ * over a near-white page, which made the larger one read as a flat white blob
+ * parked behind the portrait rather than as an object: no visible frost,
+ * because there is nothing behind it dark enough to refract. Half opacity keeps
+ * it as a soft bokeh highlight and stops it competing with the one thing in the
+ * hero that is supposed to hold the eye.
+ */
 .hero-orb {
   position: absolute;
   z-index: -1;
   border-radius: 9999px;
   border: 1px solid var(--glass-border);
   background: var(--glass);
+  opacity: 0.5;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   will-change: transform;
+}
+.dark .hero-orb {
+  opacity: 1;
 }
 .hero-orb--1 {
   top: 18%;
@@ -1092,6 +1199,26 @@ font {
   animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
+/* The portrait's shirt, as a status LED. Themed rather than hardcoded like the
+   cyan/emerald pair above, because --coral flips lightness between themes. */
+.status-pulse-coral {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--coral);
+  box-shadow: 0 0 8px var(--coral);
+}
+.status-pulse-coral::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1px solid var(--coral);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
 .status-pulse-emerald {
   position: relative;
   display: inline-block;
@@ -1130,3 +1257,486 @@ font {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * BENTO · SPATIAL · TACTILE
+ *
+ * Three ideas that only work together, which is why they share a block.
+ *
+ * BENTO is a layout claim: the page is a set of tiles of deliberately unequal
+ * size, and the sizes encode importance. A twelve-column grid where every tile
+ * is four columns wide is not a bento grid, it is a card grid with the corners
+ * rounded — the whole value is in the asymmetry.
+ *
+ * SPATIAL is what makes the asymmetry legible. Tiles that all sit flat on the
+ * page compete; tiles that occupy space — that tilt toward the cursor, that lift
+ * on approach, whose contents sit at different depths — resolve into a
+ * foreground and a background on their own.
+ *
+ * TACTILE is the part almost everyone skips. If a tile behaves like a physical
+ * object right up until you touch it, and then does nothing, the illusion breaks
+ * at exactly the moment the user was paying most attention. Every surface here
+ * has a press state, and on touch — where hover does not exist — the press is
+ * the ONLY feedback there is.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /**
+   * Tile surface, light. Mixed toward --studio rather than to pure white: that
+   * is the neutral sampled from the portrait's backdrop, so tiles and photograph
+   * agree on what "grey" means. See the portrait palette note in :root.
+   */
+  --tile-face: linear-gradient(
+    167deg,
+    #ffffff 0%,
+    color-mix(in srgb, var(--surface) 88%, var(--studio)) 100%
+  );
+  --tile-rim: color-mix(in srgb, var(--enclosure) 11%, transparent);
+  /**
+   * Four stacked shadows, and each one is doing a different job:
+   *   1. inset top      — the bevel. This is the single line that makes a flat
+   *                       rectangle read as a raised object.
+   *   2. inset bottom   — the far edge falling away.
+   *   3. contact        — 1px, tight. Where the object meets the page.
+   *   4. ambient        — wide and soft. Where the object sits in the room.
+   * Drop 1 or 3 and the tile goes flat; drop 4 and it looks pasted on.
+   */
+  --tile-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 color-mix(in srgb, var(--enclosure) 5%, transparent),
+    0 1px 2px color-mix(in srgb, var(--enclosure) 7%, transparent),
+    0 14px 30px -18px color-mix(in srgb, var(--enclosure) 42%, transparent);
+  --tile-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 color-mix(in srgb, var(--enclosure) 5%, transparent),
+    0 2px 4px color-mix(in srgb, var(--enclosure) 8%, transparent),
+    0 28px 56px -22px color-mix(in srgb, var(--enclosure) 46%, transparent),
+    0 0 40px -14px color-mix(in srgb, var(--signal) 45%, transparent);
+  /* Pressed: the bevel inverts. Light now comes from below, which is what a
+     surface pushed into the page actually looks like. */
+  --tile-shadow-press:
+    inset 0 2px 5px color-mix(in srgb, var(--enclosure) 13%, transparent),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 1px color-mix(in srgb, var(--enclosure) 5%, transparent);
+}
+
+.dark {
+  --tile-face: linear-gradient(
+    167deg,
+    color-mix(in srgb, var(--surface) 96%, #ffffff) 0%,
+    color-mix(in srgb, var(--surface) 88%, #000000) 100%
+  );
+  --tile-rim: rgba(255, 255, 255, 0.1);
+  --tile-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 16px 34px -18px rgba(0, 0, 0, 0.7);
+  --tile-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.45),
+    0 30px 60px -22px rgba(0, 0, 0, 0.8),
+    0 0 46px -12px color-mix(in srgb, var(--signal) 30%, transparent);
+  --tile-shadow-press:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+@layer components {
+
+/**
+ * ── BENTO TILE ──────────────────────────────────────────────────────────
+ *
+ * Deliberately NOT built on `.glass`, and the reason is structural rather than
+ * aesthetic: `backdrop-filter` is a grouping property. An element that has one
+ * is forced to `transform-style: flat` no matter what the stylesheet says,
+ * which would collapse every `.depth-*` child back onto the tile face and
+ * delete the 3D entirely. A surface that wants real depth has to be an opaque
+ * object.
+ *
+ * That constraint turns out to be the right look anyway. Frosted glass says
+ * "layer floating over a scene"; a bevelled opaque panel says "machined part
+ * bolted to a chassis", which is the register this site is already written in
+ * — and it costs a fraction of the compositing on a mid-range phone.
+ *
+ * The perspective is per-tile, not inherited from the grid. Each tile is its
+ * own object tilting toward its own cursor position; a shared vanishing point
+ * would make the whole grid pivot as one slab, which reads as a page-level
+ * gimmick rather than as a set of things on a desk.
+ */
+.bento-tile {
+  position: relative;
+  border-radius: 1.375rem;
+  border: 1px solid var(--tile-rim);
+  background: var(--tile-face);
+  box-shadow: var(--tile-shadow);
+  transform-style: preserve-3d;
+  transform:
+    perspective(1100px)
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg))
+    translate3d(0, var(--ty, 0px), 0);
+  transition:
+    transform 0.55s var(--ease-out-quint),
+    box-shadow 0.55s var(--ease-out-quint),
+    border-color 0.35s ease;
+}
+
+/**
+ * Top rim light. A 1px inset shadow gives the bevel; this gives the tile a
+ * light SOURCE — a soft fall from the top edge that stops about a third of the
+ * way down. Without it every tile is lit identically from nowhere in
+ * particular, and a grid of identically-lit objects reads as printed rather
+ * than as physical.
+ */
+.bento-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #fff 55%, transparent) 0%,
+    transparent 34%
+  );
+}
+.dark .bento-tile::before {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #fff 7%, transparent) 0%,
+    transparent 34%
+  );
+}
+
+/* Cursor-following specular highlight. Shares --gx/--gy with `.glass` so one
+   pointer handler feeds both surface languages. */
+.bento-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-out-quint);
+  background: radial-gradient(
+    circle 260px at var(--gx, 50%) var(--gy, 50%),
+    color-mix(in srgb, var(--signal) 20%, transparent) 0%,
+    transparent 62%
+  );
+}
+.dark .bento-tile::after {
+  background: radial-gradient(
+    circle 260px at var(--gx, 50%) var(--gy, 50%),
+    color-mix(in srgb, var(--signal) 14%, transparent) 0%,
+    transparent 62%
+  );
+}
+
+/* Same rule as `.glass > *`: content has to clear the rim light and the
+   specular layer, or it paints underneath them. */
+.bento-tile > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bento-tile:hover {
+  --ty: -5px;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: var(--tile-shadow-hover);
+}
+.bento-tile:hover::after {
+  opacity: 1;
+}
+
+/**
+ * TACTILE PRESS.
+ *
+ * `scale` as an independent property rather than a transform — the same reason
+ * documented on `.magnetic`: the transform slot already holds the tilt, which
+ * is driven by CSS vars that JS writes, and a second transform declaration
+ * would simply replace it. `scale` composes.
+ *
+ * Faster than the hover (0.1s vs 0.55s) on purpose. Press should feel like
+ * contact — instant, mechanical. Release is what gets to be eased.
+ */
+.bento-tile:active {
+  --ty: -1px;
+  --rx: 0deg;
+  --ry: 0deg;
+  scale: 0.988;
+  box-shadow: var(--tile-shadow-press);
+  transition-duration: 0.1s;
+}
+
+/**
+ * NOTE — do not add a stretched-link (`after:absolute after:inset-0`) anchor as
+ * a direct child of a tile. `.bento-tile > *` gives every direct child
+ * `position: relative`, so the anchor becomes its own containing block and the
+ * pseudo-element covers the LINK rather than the tile. Making the anchor
+ * `static` to work around that drops it below the `::after` specular layer,
+ * which then tints the link text on hover. Tiles link via their own visible
+ * anchor instead; the tile's hover and press states already make it read as one
+ * object.
+ */
+
+/**
+ * ── DEPTH LAYERS ────────────────────────────────────────────────────────
+ *
+ * Push an element toward the viewer inside a `preserve-3d` parent. Because the
+ * parent carries the perspective, a positive Z also scales the element very
+ * slightly and shifts it against the tile as the tile rotates — which is the
+ * actual parallax, and the reason this reads as depth rather than as a drop
+ * shadow.
+ *
+ * Kept deliberately small. A positive Z is applied at ALL times, not only while
+ * tilting, so the apparent scale it introduces is a permanent cost paid by
+ * every heading that sits on a layer — and on a design whose whole claim is
+ * crisp type on a clean canvas, a heading rendered at 1.032× and resampled is
+ * a bad trade for depth nobody asked for.
+ *
+ * 10 / 22 / 38px against a 1100px perspective is 0.9% / 2.0% / 3.6%: below the
+ * threshold where the scaling is legible as scaling, while the parallax on tilt
+ * (Z × sin θ, so ~2.7px at 22px and 7°) is comfortably above the threshold
+ * where the shift is legible as depth. That gap is the entire budget.
+ */
+.depth-1 { transform: translateZ(10px); }
+.depth-2 { transform: translateZ(22px); }
+.depth-3 { transform: translateZ(38px); }
+
+/**
+ * Full spatial parallax — drifts against the pointer AND floats above the face.
+ * `--px`/`--py` are the pointer position normalised to -0.5…0.5 (written by
+ * PremiumInteractions); `--pdx`/`--pdy` are the per-element travel budget.
+ *
+ * Unitless custom properties multiplied by a length inside calc() — no
+ * @property registration needed, because nothing here is being interpolated:
+ * the transition is on `transform` itself, not on the variables.
+ */
+.parallax {
+  transform:
+    translate3d(
+      calc(var(--px, 0) * var(--pdx, 16px)),
+      calc(var(--py, 0) * var(--pdy, 16px)),
+      var(--pz, 40px)
+    );
+  transition: transform 0.4s var(--ease-out-quint);
+}
+
+/**
+ * ── PORTRAIT ────────────────────────────────────────────────────────────
+ *
+ * The headshot is a formal ID photograph: flat studio lighting, a neutral grey
+ * gradient backdrop, a charcoal blazer, and exactly one saturated colour — the
+ * coral shirt. Three problems follow from that, and this block is the answer to
+ * all three.
+ *
+ * 1. WHERE DOES THE GREY GO? On a near-white minimalist page, a rectangle of
+ *    mid-grey is the flattest thing on screen. Lightening it just makes it
+ *    muddy. So the photo is inset into a near-black MAT instead — dark in both
+ *    themes, which on the light theme makes the portrait the one dark object on
+ *    the page and therefore the focal point by default. The mat also picks up
+ *    the blazer's own value, so the top of the photograph dissolves into its
+ *    frame instead of ending at a hard edge.
+ *
+ * 2. WHERE IS THE LIGHT COMING FROM? Nowhere — that is what "studio lighting"
+ *    means. A warm rim down the right edge and a coral floor glow give the
+ *    frame a direction the photograph itself doesn't have, so it composes with
+ *    a page whose entire ambient story is one warm light source.
+ *
+ * 3. WHY CORAL? Because the shirt is going to be on screen either way. Echoing
+ *    it in the floor glow (and in the LEDs elsewhere) is what turns it from a
+ *    colour the design has to tolerate into a colour the design chose.
+ */
+.portrait-stage {
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+}
+
+.portrait-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transform:
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg))
+    translate3d(0, var(--ty, 0px), 0);
+  transition: transform 0.6s var(--ease-out-quint);
+}
+
+/**
+ * The frame around the mat. Same material as a bento tile — face, rim, bevel,
+ * ambient shadow — but WITHOUT `.bento-tile` itself, and that separation is
+ * load-bearing: `.bento-tile` is one of the selectors the pointer handler tilts,
+ * so putting it on a child of `.portrait-card` would give `closest()` two
+ * candidates and the inner one would win. The frame therefore carries only the
+ * material, and `.portrait-card` on the same element carries only the motion.
+ *
+ * No `overflow: hidden` here on purpose — the HUD chips deliberately break the
+ * frame's edge, which is most of what sells the card as an object in space
+ * rather than a picture of one.
+ */
+.portrait-frame {
+  border-radius: 1.5rem;
+  border: 1px solid var(--tile-rim);
+  background: var(--tile-face);
+  box-shadow: var(--tile-shadow);
+}
+
+/* The dark inset the photograph lives in. Not themed — see note 1 above. */
+.portrait-mat {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.125rem;
+  background: linear-gradient(168deg, var(--mat) 0%, var(--mat-deep) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 2px 14px rgba(0, 0, 0, 0.55);
+}
+
+/**
+ * Vignette in the mat's own colour, feathering the photo's corners into the
+ * frame. This is the single element doing the most work in the whole block:
+ * without it the studio backdrop terminates at a crisp rectangle and no amount
+ * of framing hides that the photo was cut out and dropped in.
+ */
+.portrait-mat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 105% at 50% 12%,
+    transparent 40%,
+    var(--mat-deep) 100%
+  );
+}
+
+/**
+ * The bottom scrim is a LEGIBILITY device, not a look — it exists so white
+ * overlay text has something to sit on. It therefore ships with the caption
+ * rather than with the mat.
+ *
+ * It was originally unconditional, which was fine while the hero was the only
+ * instance. The moment /about reused the mat without a caption, the same band
+ * turned into an unexplained dark gradient eating the bottom third of a
+ * portrait for no reason at all — darkening that the composition never asked
+ * for and no text was using.
+ */
+.portrait-mat--captioned::after {
+  background:
+    radial-gradient(
+      130% 105% at 50% 12%,
+      transparent 40%,
+      var(--mat-deep) 100%
+    ),
+    linear-gradient(to top, rgba(6, 10, 16, 0.85) 0%, transparent 42%);
+}
+
+/* Warm rim down the right edge + coral floor glow — the invented light source.
+   `screen` so it adds light rather than tinting the skin tones underneath. */
+.portrait-rim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Above `.portrait-mat::after`. The vignette is a *subtractive* layer that
+     darkens the photo's corners into the frame; the rim is an *additive* one
+     that relights it. Paint them the other way round and the vignette eats the
+     rim light it is supposed to be shaped by. z-index:1 beats the pseudo-
+     element's `auto` in the same stacking context. */
+  z-index: 1;
+  mix-blend-mode: screen;
+  background:
+    linear-gradient(
+      270deg,
+      color-mix(in srgb, var(--signal) 34%, transparent) 0%,
+      transparent 26%
+    ),
+    radial-gradient(
+      75% 42% at 50% 108%,
+      color-mix(in srgb, var(--coral) 40%, transparent) 0%,
+      transparent 70%
+    );
+}
+
+/**
+ * The frame around the mat. A hair of extra contrast on the photo itself:
+ * studio-flat images sit half a stop soft next to a page of crisp 1px rules, and
+ * this is the cheapest way to make them agree. Kept low — 1.06/1.04 is a nudge,
+ * not a look.
+ */
+.portrait-photo {
+  filter: contrast(1.06) saturate(1.04);
+}
+
+/* Floating HUD chips sit OUTSIDE the mat, not inside it: `overflow: hidden`
+   flattens its own subtree, so anything that needs to hover above the photo in
+   real 3D has to be a sibling of the mat rather than a child. */
+.portrait-chip {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid var(--tile-rim);
+  background: var(--tile-face);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 24px -12px color-mix(in srgb, var(--enclosure) 55%, transparent);
+}
+.dark .portrait-chip {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 26px -12px rgba(0, 0, 0, 0.8);
+}
+
+/**
+ * ── DEGRADATION ─────────────────────────────────────────────────────────
+ *
+ * Every rule above is a refinement layered on top of a design that has to work
+ * without it. Two conditions remove the whole 3D system:
+ *
+ *   • prefers-reduced-motion — parallax and tilt are vestibular triggers, and
+ *     there is no "gentler" version of a rotating plane that is still the
+ *     effect. It goes, entirely. The bevels, rim light and shadows stay, so the
+ *     tiles are still objects; they just stop moving.
+ *
+ *   • no hover / coarse pointer — a tilt driven by cursor position has nothing
+ *     to be driven BY on a touchscreen. Leaving the transform in place would
+ *     cost a compositor layer per tile on exactly the devices least able to
+ *     afford one. The `:active` press is untouched and becomes the entire
+ *     feedback story on touch, which is why it was built to stand alone.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bento-tile,
+  .portrait-card,
+  .parallax,
+  .depth-1,
+  .depth-2,
+  .depth-3 {
+    transform: none !important;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .bento-tile:active {
+    scale: 1;
+  }
+}
+
+@media (hover: none) {
+  .bento-tile,
+  .portrait-card {
+    transform: none;
+  }
+  .bento-tile::after {
+    display: none;
+  }
+  .parallax {
+    /* Keep the Z offset — it is what stacks the chip above the photo — but drop
+       the pointer-driven drift, which would be permanently frozen at 0 anyway. */
+    transform: translate3d(0, 0, var(--pz, 40px));
+  }
+}
+
+} /* end @layer components */

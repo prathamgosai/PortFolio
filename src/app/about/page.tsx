@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Section, DenseGrid, DenseCell } from "@/components/ui";
+import { PortraitPanel } from "@/components/portrait-card";
 import { BreadcrumbJsonLd } from "@/components/breadcrumb-jsonld";
 import { PageJsonLd } from "@/components/page-jsonld";
 import { identity, skills } from "@/data/portfolio";
@@ -58,20 +58,16 @@ export default function AboutPage() {
           </div>
 
           <div>
-            {identity.photo ? (
-              <Image
-                src={identity.photo.src}
-                width={identity.photo.width}
-                height={identity.photo.height}
-                alt={`${identity.name}, ${identity.oneLine}`}
-                sizes="(min-width: 1024px) 30rem, 100vw"
-                priority
-                /* rounded-3xl, not the old 2px `rounded` — a near-square photo
-                   next to 24px-radius panels was the card-language split showing
-                   up inside a single column. */
-                className="w-full rounded-3xl border border-hairline object-cover"
-              />
-            ) : null}
+            {/**
+             * Was a bare <Image> in a `rounded-3xl border` box, which left the
+             * photograph's grey studio backdrop ending at a hard edge against
+             * this near-white column — the exact problem the mat, vignette and
+             * rim light were built to solve on the homepage. Sharing
+             * <PortraitPanel/> means the photo now has one opinion about its
+             * own background instead of two. See `.portrait-stage` in
+             * globals.css.
+             */}
+            <PortraitPanel />
             <div className="glass mt-6 rounded-3xl p-6">
               <p className="label">Based in</p>
               <p className="t-small mt-2 text-fg">{identity.location}</p>

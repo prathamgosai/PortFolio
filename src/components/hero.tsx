@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { Fragment, useRef } from "react";
-import { ArrowRight, ArrowUpRight, Download, MapPin, MousePointer2 } from "lucide-react";
-import prathamPhoto from "@/../public/pratham-portrait.jpeg";
+import { ArrowRight, Download, MousePointer2 } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
+import { PortraitCard } from "@/components/portrait-card";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { hero, identity, workforceiq } from "@/data/portfolio";
 
@@ -94,41 +93,30 @@ export function Hero() {
           </div>
         </div>
 
-        {/* ── Floating profile card ── */}
+        {/**
+         * ── Portrait ──
+         *
+         * The flat glass panel that used to live here (a rounded box, a
+         * `hover:scale-105` on the image, a black-to-transparent scrim) has been
+         * replaced by <PortraitCard/>, which treats the photograph as a lit
+         * object in space rather than as a picture in a frame. The reasoning —
+         * why the mat is dark in both themes, where the light is coming from,
+         * and why the HUD chips hang off the frame's edge — is documented at
+         * `.portrait-stage` in globals.css.
+         *
+         * `mx-auto lg:mx-0` still lives out here rather than inside the card:
+         * the card owns its own material, the hero owns where it sits.
+         *
+         * `w-full` is NOT redundant next to `mx-auto`, and dropping it is what
+         * broke this once already. This div is a grid item, and an `auto` inline
+         * margin on a grid item overrides `justify-self: stretch` — the item
+         * stops filling its track and shrink-wraps its contents instead. On
+         * mobile that collapsed the whole portrait to ~206px, which in turn
+         * dropped the HUD chip onto the name overlay. `w-full` pins the track
+         * width back, `max-w-sm` caps it, and `mx-auto` then only centres.
+         */}
         <div className="hero-in mx-auto w-full max-w-sm lg:mx-0" style={{ animationDelay: "0.15s" }}>
-          <div className="stitch-hud-card rounded-3xl p-4">
-            <div className="relative z-[1] aspect-[4/5] w-full overflow-hidden rounded-2xl border border-hairline shadow-inner">
-              <Image
-                src={prathamPhoto}
-                alt={`${identity.name} — portrait`}
-                placeholder="blur"
-                priority
-                fill
-                sizes="(min-width: 1024px) 384px, 90vw"
-                className="object-cover transition-transform duration-500 hover:scale-105"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
-              <div className="absolute inset-x-3 bottom-3">
-                <p className="font-display text-xl font-bold text-white tracking-tight">{identity.name}</p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs font-mono text-white/80">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" /> {identity.openTo}
-                </p>
-              </div>
-            </div>
-            <div className="relative z-[1] mt-3.5 flex items-center justify-between px-1">
-              <span className="flex items-center gap-2 text-xs font-mono text-muted">
-                <span className="status-pulse-cyan" /> L1-L3 Active
-              </span>
-              <a
-                href={identity.github}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-accent-ink hover:underline"
-              >
-                GitHub <ArrowUpRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
+          <PortraitCard />
         </div>
       </div>
 

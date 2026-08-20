@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { stats } from "@/data/portfolio";
-import { AnimatedStat } from "@/components/animated-stat";
 
 /**
  * Vertical rhythm.
@@ -72,6 +70,31 @@ export function Section({
  * as a dozen floating panels (the skills matrix, the certification lists). That
  * is a deliberate exception, not a second default — and it now always sits
  * *inside* a Card, so even the exception is framed by the primary language.
+ *
+ * ── THE BENTO TILE, AND WHY IT IS NOT A THIRD DRIFT ──
+ *
+ * `.bento-tile` (globals.css, primitives in bento.tsx) is a second body surface,
+ * which is exactly what the paragraphs above warn against — so it needs a rule,
+ * and the rule is:
+ *
+ *     A TILE IS READ. A CARD IS ENTERED.
+ *
+ * A tile is a grid member whose job is finished on the page it sits on: a
+ * number, a capability, a stack group. It is sized relative to its neighbours,
+ * because in a bento grid size IS the ranking, and it is opaque and bevelled
+ * because it has to hold `transform-style: preserve-3d` for the depth layers —
+ * `backdrop-filter` would flatten them (see the note on `.bento-tile`).
+ *
+ * A card is a destination. The featured case study, a blog post, the closing
+ * CTA — each one is a thing you click into and then read somewhere else. Those
+ * stay glass, and there are now few enough of them that glass reads as "this
+ * one goes somewhere" rather than as the page's default texture. The feature
+ * card in particular is the only frosted panel in the homepage body, which
+ * gives it more authority than the amber ring ever did on its own.
+ *
+ * The split is therefore semantic, not decorative, and it is testable: if a new
+ * panel's whole purpose is to be clicked, it is a Card. If it is one of N peers
+ * being compared, it is a BentoTile.
  *
  * `tone`:
  *   "default" — the standard panel.
@@ -175,41 +198,13 @@ export function ChipRow({ items }: { items: string[] }) {
 }
 
 /**
- * The four approved stats (§3), as the proof beat directly under the hero.
- *
- * One glass panel divided by hairlines rather than four separate cards: the
- * numbers are a single claim in four parts, and four floating tiles read as four
- * unrelated facts. The amber rule above each is the LED motif, and this is one
- * of the few places it still earns the accent — these are the proof.
+ * `StatBar` used to live here — one hairline-divided glass panel holding the
+ * four proof numbers, rendered directly under the hero. It is gone, along with
+ * <CertTrust/>, because both were absorbed into the overview bento
+ * (system-bento.tsx), where the same numbers are tiles whose size ranks them
+ * against everything else on that screen instead of forming a strip of four
+ * equal cells that ranks them against nothing.
  */
-export function StatBar() {
-  return (
-    <section aria-label="By the numbers" className="mx-auto max-w-5xl px-5">
-      <div className="stitch-glass blueprint-grid overflow-hidden rounded-3xl p-1 sm:p-2">
-        {/* gap-px over a hairline-coloured track draws the dividers; the cells
-            are opaque --surface so the 1px seams actually read. */}
-        <ul className="grid grid-cols-2 gap-px bg-hairline rounded-2xl overflow-hidden lg:grid-cols-4">
-          {stats.map((stat, idx) => (
-            <li key={stat.label} className="stitch-hud-card border-none rounded-none bg-surface/90 px-5 py-7 sm:px-6 sm:py-8 transition-all hover:bg-surface">
-              <div className="flex items-center justify-between">
-                <span aria-hidden className="block h-1 w-6 rounded-full bg-accent" />
-                <div className="flex items-center gap-1.5">
-                  <span className={idx % 2 === 0 ? "status-pulse-amber" : "status-pulse-cyan"} />
-                  <span className="t-mono-badge text-[0.6875rem] text-muted">LIVE</span>
-                </div>
-              </div>
-              <AnimatedStat
-                value={stat.value}
-                className="mt-3 font-mono text-3xl font-extrabold tracking-tight text-fg tabular-nums sm:text-4xl"
-              />
-              <p className="mt-1.5 text-sm leading-snug text-muted font-medium">{stat.label}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
 
 export function CTABlock({
   title,

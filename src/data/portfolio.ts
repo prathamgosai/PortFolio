@@ -49,12 +49,50 @@ export const hero = {
   sub: "Desktop & network engineer turned full-stack builder in Surat, India. I built WorkforceIQ — an AI-assisted workforce platform for 370+ restaurant staff — and I automate real operations with the Claude API.",
 };
 
-/** §3: approved proof-bar stats. These four only. */
+/**
+ * §3: approved proof-bar stats. These four only.
+ *
+ * `kind` and `note` were added when these became bento tiles. A tile in that
+ * grid is stretched to the height of the two-row anchor tile beside it, and a
+ * bare figure-plus-caption does not fill that box — it left a third of each
+ * tile empty, which reads as content that failed to load rather than as
+ * restraint.
+ *
+ * NOTHING NEW IS CLAIMED HERE. Every `note` is a restatement of a fact already
+ * confirmed elsewhere in this file, and the source is named so it stays
+ * checkable:
+ *   370+ → workforceiq.outcomes[0]
+ *   10+  → experience[1].bullets (Premware: Windows, printers, LAN/WAN)
+ *   14   → certificationGroups[0] (Anthropic: Claude API, AI Fluency, Claude 101)
+ *   6    → workforceiq.features "Role-based access control"
+ * If a note is ever edited, edit it back to its source — do not let it drift
+ * into a new claim.
+ */
 export const stats = [
-  { value: "370+", label: "staff on a platform I built end-to-end" },
-  { value: "10+", label: "months of hands-on L1/L2 desktop & network support" },
-  { value: "14", label: "certifications from Anthropic, Cisco, Microsoft & Meta" },
-  { value: "6", label: "account roles in a live permission system" },
+  {
+    kind: "Scale",
+    value: "370+",
+    label: "staff on a platform I built end-to-end",
+    note: "Across multiple brands and outlets.",
+  },
+  {
+    kind: "Field time",
+    value: "10+",
+    label: "months of hands-on L1/L2 desktop & network support",
+    note: "Windows machines, printers, peripherals, LAN/WAN.",
+  },
+  {
+    kind: "Certified",
+    value: "14",
+    label: "certifications from Anthropic, Cisco, Microsoft & Meta",
+    note: "Three from Anthropic, including Claude API development.",
+  },
+  {
+    kind: "Access control",
+    value: "6",
+    label: "account roles in a live permission system",
+    note: "Live-editable, not hardcoded and redeployed.",
+  },
 ];
 
 export const whatIDo = [

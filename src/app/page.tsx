@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Section, ChipRow, ButtonLink, CTABlock, Card, CardGrid, StatBar } from "@/components/ui";
+import { Section, ChipRow, ButtonLink, CTABlock, Card, CardGrid } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { Hero } from "@/components/hero";
 import { Faq } from "@/components/faq";
 import { Testimonials } from "@/components/testimonials";
-import { CertTrust } from "@/components/cert-trust";
+import { SystemBento } from "@/components/system-bento";
 import { TechStack } from "@/components/tech-stack";
 import { PersonJsonLd } from "@/components/person-jsonld";
 import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
-import { experience, identity, whatIDo, workforceiq } from "@/data/portfolio";
+import { experience, identity, workforceiq } from "@/data/portfolio";
 
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 2);
@@ -22,28 +22,17 @@ export default function HomePage() {
 
       <Hero />
 
-      {/* Proof numbers — lifted out of the hero so both can breathe. */}
-      <StatBar />
-
-      {/* Certifications credibility strip */}
-      <CertTrust />
-
-      {/* What I do */}
-      <Section label="What I do" title="Three layers, one job: make things work.">
-        <CardGrid className="mt-10">
-          {whatIDo.map((item, i) => (
-            <Reveal key={item.title} delay={i * 0.05}>
-              <Card className="h-full">
-                <div className="relative z-[1]">
-                  <span aria-hidden className="block h-0.5 w-6 bg-accent" />
-                  <h3 className="t-card-title mt-4 text-fg">{item.title}</h3>
-                  <p className="t-small mt-3 text-muted">{item.body}</p>
-                </div>
-              </Card>
-            </Reveal>
-          ))}
-        </CardGrid>
-      </Section>
+      {/**
+       * Overview bento.
+       *
+       * This one grid absorbs what used to be three consecutive full-width
+       * strips — <StatBar/>, <CertTrust/> and the "What I do" card grid — each
+       * of which made the same kind of claim at the same visual weight, one
+       * after another, for roughly three screens of scroll. The bento ranks them
+       * by tile size instead of by scroll order, which is both shorter and
+       * legible before anything is read. Rationale in system-bento.tsx.
+       */}
+      <SystemBento />
 
       {/* Tech stack */}
       <TechStack />
