@@ -8,6 +8,7 @@ import { PremiumInteractions } from "@/components/premium-interactions";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { Ambient } from "@/components/ambient";
+import { ImmersiveScene } from "@/components/three/immersive-scene";
 import { CursorSpotlight } from "@/components/cursor-spotlight";
 import { CustomCursor } from "@/components/custom-cursor";
 import { CommandPalette } from "@/components/command-palette";
@@ -129,6 +130,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
         <Ambient />
+        <ImmersiveScene />
         <CursorSpotlight />
         <CustomCursor />
         <ServiceWorkerCleanup />

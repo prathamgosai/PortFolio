@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import { DigitalField, type FieldMode } from "@/components/lab/digital-field";
+import type { FieldMode } from "@/components/lab/digital-field";
+import { setSceneMode } from "@/components/three/scene-mode";
 import { labSections } from "@/data/lab";
 import { identity } from "@/data/portfolio";
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
@@ -88,6 +89,19 @@ export function LabShell({ children }: { children: React.ReactNode }) {
     };
   }, [menuOpen]);
 
+  /**
+   * Publish the section mode to the scene. Reset to "drift" on unmount —
+   * without that, navigating away from /lab mid-section would leave every other
+   * route's background stuck in whatever shape the last section asked for.
+   */
+  useEffect(() => {
+    setSceneMode(mode);
+  }, [mode]);
+
+  useEffect(() => {
+    return () => setSceneMode("drift");
+  }, []);
+
   const index = Math.max(
     0,
     labSections.findIndex((s) => s.id === current),
@@ -95,8 +109,13 @@ export function LabShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="lab-root">
-      <DigitalField mode={mode} />
-
+      {/**
+       * The field used to be rendered here. It now lives once in the root
+       * layout as <ImmersiveScene/>, so it persists across navigation instead
+       * of being torn down and rebuilt whenever someone leaves /lab and comes
+       * back. This shell publishes the section mode to it and owns nothing else
+       * about the environment.
+       */}
       {children}
 
       {/* ── HUD ──────────────────────────────────────────────────────── */}

@@ -639,10 +639,14 @@ export const waysOfWorking = [
  * project is a data edit. Two entries, and the constraint that keeps it at two
  * is documented rather than implied:
  *
- *  - WifiPlus, Cost-Crafting-Restaurant- and AI-Agent are deliberately ABSENT.
- *    §10 Q7 is unanswered — no honest one-line description has been supplied for
- *    them. `footer.tsx` links wifiplus.prathamgosai.in separately; that link is
- *    a fact (the site exists), a project card would be a claim about what it is.
+ *  - WifiPlus is now INCLUDED. §10 Q7 blocked it because no honest description
+ *    existed; the description below is taken from the live site's own copy and
+ *    feature list (wifiplus.prathamgosai.in) and the public repo, both read
+ *    directly rather than recalled. Its `year` is null because neither source
+ *    states one — see the note on the type.
+ *  - Cost-Crafting-Restaurant- and AI-Agent remain ABSENT. §10 Q7 is still
+ *    unanswered for those two, and nothing has been supplied or published that
+ *    would let a description be written honestly.
  *  - `learningInPublic` stays a separate array on purpose. §1: study repos are
  *    NEVER presented as original work, and the way to guarantee that is to keep
  *    them out of the structure that renders "work".
@@ -653,7 +657,8 @@ export const waysOfWorking = [
 export type Project = {
   slug: string;
   name: string;
-  year: string;
+  /** Null when the year is not confirmed — the row omits it rather than guess. */
+  year: string | null;
   category: string;
   tagline: string;
   stack: string[];
@@ -674,6 +679,21 @@ export const projects: Project[] = [
     caseStudy: `/projects/${workforceiq.slug}`,
     repo: workforceiq.repo,
     live: workforceiq.demoUrl,
+  },
+  {
+    slug: "wifiplus",
+    name: "WifiPlus",
+    // Neither the live site nor the repo states a build year. Omitted, not guessed.
+    year: null,
+    category: "Network diagnostics",
+    tagline:
+      "Browser-based network diagnostics: download and upload speed, ping, jitter, packet loss, DNS latency and bufferbloat grading — measured, graded, and compared against an ISP database by region.",
+    // The stack the site itself publishes, narrowed to the load-bearing six so
+    // the row carries the same visual weight as the others.
+    stack: ["TypeScript", "Next.js", "React", "Node.js", "PostgreSQL", "Redis"],
+    caseStudy: null,
+    repo: "https://github.com/prathamgosai/WifiPlus",
+    live: "https://wifiplus.prathamgosai.in/",
   },
   {
     slug: "portfolio",

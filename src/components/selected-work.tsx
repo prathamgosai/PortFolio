@@ -80,8 +80,15 @@ export function SelectedWork() {
                   </h3>
                   <p className="label work-row__meta">
                     {project.category}
-                    <span aria-hidden> · </span>
-                    {project.year}
+                    {/* Year is omitted, not guessed, when unconfirmed — and the
+                        separator has to go with it or the line ends in a stray
+                        middot. */}
+                    {project.year ? (
+                      <>
+                        <span aria-hidden> · </span>
+                        {project.year}
+                      </>
+                    ) : null}
                   </p>
                 </div>
 
@@ -94,6 +101,27 @@ export function SelectedWork() {
                     </li>
                   ))}
                 </ul>
+
+                {/**
+                 * Secondary repo link, for a project whose primary destination
+                 * is its live site. `relative z-[3]` is load-bearing: the row's
+                 * stretched anchor lays a pseudo-element at z-index 2 across the
+                 * whole row, so without lifting this above it the link is
+                 * covered and unclickable — it would look like a link and do
+                 * nothing, which is worse than not offering it.
+                 */}
+                {project.repo && project.live ? (
+                  <a
+                    href={project.repo}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="work-row__repo relative z-[3] mt-4 inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-ink hover:underline"
+                    data-cursor="Code"
+                  >
+                    View source
+                    <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
               </div>
 
               <div className="work-row__cta" aria-hidden>
