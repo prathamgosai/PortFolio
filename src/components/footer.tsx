@@ -32,7 +32,17 @@ export function Footer() {
           </div>
           <p className="label">© 2026 {identity.name}</p>
           <p className="text-xs text-muted">
-            Built by Pratham Gosai — also visit{" "}
+            {/* /lab is an alternate presentation of this same site, not another
+                property — so it is an internal <Link> (prefetched, client-side)
+                while the wifiplus cross-link stays a plain external anchor. */}
+            Explore the{" "}
+            <Link
+              href="/lab"
+              className="font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 transition-colors hover:text-fg"
+            >
+              interactive systems view
+            </Link>
+            {" "}— or visit{" "}
             <a
               href="https://wifiplus.prathamgosai.in/"
               target="_blank"

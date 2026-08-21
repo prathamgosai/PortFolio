@@ -1,0 +1,1036 @@
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * /lab — scoped stylesheet.
+ *
+ * Everything is namespaced under `.lab-root` so it cannot leak into the rest
+ * of the site, matching the convention `noc.css` already set here.
+ *
+ * The route supports BOTH themes. Nothing below hardcodes a colour that does
+ * not come from the design tokens, so light and dark are the same stylesheet
+ * with a different palette underneath rather than two designs.
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Hide the site's own chrome and ambient layer on this route only.
+ *
+ * `:has()` lets this happen in CSS with no hydration flash and no prop drilled
+ * down from a layout — the same trick `noc.css` uses. The header and footer are
+ * direct children of <body>; the lab's own chrome lives inside `.lab-root`.
+ * The site's `.ambient` orbs go too: this page has its own environment, and two
+ * competing background systems is one too many.
+ */
+body:has(.lab-root) > header,
+body:has(.lab-root) > footer,
+body:has(.lab-root) > .ambient {
+  display: none;
+}
+/* The root layout pads <main> for the floating navbar that is hidden here. */
+body:has(.lab-root) > main {
+  padding-top: 0;
+}
+
+/**
+ * NOTE — there used to be an `animation: none` override here, killing the root
+ * template's page-enter animation on this route. It was a workaround for that
+ * animation's `transform` making the template wrapper the containing block for
+ * this page's `position: fixed` HUD and menu.
+ *
+ * That is now fixed at the source: `pageEnter` animates opacity only (see the
+ * comment on it in globals.css), so no ancestor transform exists to capture
+ * fixed descendants — on this route or any future one. The override is gone
+ * rather than left in place, because a workaround for a bug that no longer
+ * exists is just a rule nobody dares delete later.
+ */
+
+.lab-root {
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────── */
+
+.lab-display {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  /* Caps at 128px. Bigger than anything on the main site, because this page has
+     almost no competing content — but still clamped from 40px so a 320px
+     viewport never has to scroll sideways to read a headline. */
+  font-size: clamp(2.5rem, 1rem + 7.4vw, 8rem);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+}
+.lab-display--sm {
+  font-size: clamp(2.25rem, 1rem + 5.4vw, 5.5rem);
+}
+.lab-display span,
+.lab-statement span {
+  display: block;
+}
+
+.lab-statement {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.875rem, 1rem + 3.6vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+  color: var(--fg);
+}
+
+.lab-label,
+.lab-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.lab-lede {
+  max-width: 46rem;
+  margin-top: 2rem;
+  font-size: clamp(1.0625rem, 0.98rem + 0.42vw, 1.25rem);
+  line-height: 1.65;
+  color: var(--fg-muted);
+}
+.lab-lede--tight {
+  margin-top: 1.5rem;
+}
+
+.lab-note {
+  max-width: 42rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--fg-muted);
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+
+.lab-section {
+  position: relative;
+  z-index: 1;
+  max-width: 78rem;
+  margin: 0 auto;
+  /* Generous but not absurd: each section should own a screen without forcing
+     a scroll marathon between two paragraphs. */
+  padding: clamp(6rem, 14vh, 11rem) clamp(1.25rem, 5vw, 4rem);
+  scroll-margin-top: 0;
+}
+.lab-section--hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: clamp(7rem, 18vh, 12rem);
+}
+.lab-section--end {
+  padding-bottom: clamp(5rem, 12vh, 8rem);
+}
+.lab-section--hero .lab-display {
+  margin-top: 2rem;
+}
+
+.lab-hint {
+  margin-top: auto;
+  padding-top: 4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ── Hero metrics ──────────────────────────────────────────────────────── */
+
+.lab-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem 2.5rem;
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--hairline);
+  list-style: none;
+}
+@media (min-width: 34rem) {
+  .lab-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 64rem) {
+  .lab-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.lab-metric__value {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.lab-metric__label {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+/* ── Layers ────────────────────────────────────────────────────────────── */
+
+.lab-layers {
+  margin-top: 4rem;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.lab-layer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+@media (min-width: 48rem) {
+  .lab-layer {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+.lab-layer__num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  color: var(--accent-ink);
+  padding-top: 0.4rem;
+}
+.lab-layer__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.375rem, 1rem + 1.4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+.lab-layer__body {
+  max-width: 46rem;
+  margin-top: 0.85rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--fg-muted);
+}
+
+/* ── System graph ──────────────────────────────────────────────────────── */
+
+.sysgraph {
+  margin-top: 3.5rem;
+}
+.sysgraph__stage {
+  position: relative;
+  width: 100%;
+}
+.sysgraph__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sysgraph__nodes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Mobile: the absolute positioning is dropped entirely and the same markup
+ * becomes a plain vertical list. Nothing is duplicated and nothing is hidden —
+ * a 1000-unit-wide diagram squeezed into 320px would be unreadable, and the
+ * nodes were always a list underneath.
+ */
+@media (max-width: 47.99rem) {
+  .sysgraph__svg {
+    display: none;
+  }
+  .sysgraph__nodes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .sysgraph__node-slot {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+  }
+  .sysgraph__node {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (min-width: 48rem) {
+  .sysgraph__stage {
+    /* Locked to the SVG's own aspect so node percentages and viewBox
+       coordinates describe the same space with zero measurement. */
+    aspect-ratio: 1000 / 560;
+  }
+  .sysgraph__nodes {
+    position: absolute;
+    inset: 0;
+  }
+  .sysgraph__node-slot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.sysgraph__edge {
+  fill: none;
+  stroke: var(--wire);
+  stroke-width: 1.25;
+  opacity: 0.45;
+  transition: opacity 0.35s var(--ease-out-quint), stroke 0.35s var(--ease-out-quint);
+}
+.sysgraph__edge.is-lit {
+  stroke: var(--accent);
+  opacity: 1;
+}
+
+.sysgraph__flow {
+  fill: var(--accent);
+  opacity: 0.55;
+  offset-rotate: 0deg;
+  animation: sysgraph-flow 2.6s linear infinite;
+  transition: opacity 0.35s var(--ease-out-quint);
+}
+.sysgraph__flow.is-lit {
+  opacity: 1;
+}
+@keyframes sysgraph-flow {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.sysgraph__node {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.3s var(--ease-out-quint),
+    box-shadow 0.3s var(--ease-out-quint),
+    transform 0.3s var(--ease-out-quint);
+}
+.sysgraph__node.is-primary {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.sysgraph__node:hover,
+.sysgraph__node.is-active,
+.sysgraph__node:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 14%, transparent);
+  transform: translateY(-2px);
+}
+.sysgraph__node-label {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.sysgraph__node-kind {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.sysgraph__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+  /* Reserved height — hovering a node must never reflow the page. */
+  min-height: 3.25rem;
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+}
+.sysgraph__readout-label {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+}
+.sysgraph__readout-detail,
+.sysgraph__readout-hint {
+  max-width: 52rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+/* ── WorkforceIQ ───────────────────────────────────────────────────────── */
+
+.lab-wiq-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  margin-top: 1.5rem;
+}
+.lab-wiq-figure {
+  text-align: right;
+}
+.lab-wiq-figure__value {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(2rem, 1.2rem + 2.4vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+.lab-wiq-figure__label {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.lab-outcomes {
+  margin-top: 3rem;
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 60rem) {
+  .lab-outcomes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+.lab-outcomes li {
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-top: 3rem;
+}
+.lab-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--accent);
+  transition: color 0.3s ease, gap 0.3s var(--ease-out-quint);
+}
+.lab-action--quiet {
+  color: var(--fg-muted);
+  border-bottom-color: var(--rule);
+}
+.lab-action:hover {
+  color: var(--accent-ink);
+  gap: 0.85rem;
+}
+.lab-action svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ── Automation flow ───────────────────────────────────────────────────── */
+
+.lab-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  margin-top: 3.5rem;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+@media (min-width: 60rem) {
+  .lab-flow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.lab-flow__stage {
+  position: relative;
+  padding: 1.75rem 1.5rem;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  transition: background-color 0.35s var(--ease-out-quint);
+}
+.lab-flow__stage:hover {
+  background: var(--surface);
+}
+.lab-flow__index {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--accent-ink);
+}
+.lab-flow__title {
+  margin-top: 0.75rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+.lab-flow__body {
+  margin-top: 0.6rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+/* ── Technology constellation ──────────────────────────────────────────── */
+
+.constellation {
+  margin-top: 3.5rem;
+}
+.constellation__field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  align-items: baseline;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.constellation__item {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    color 0.28s var(--ease-out-quint),
+    opacity 0.28s var(--ease-out-quint);
+}
+/* Shipped in WorkforceIQ — larger and inked, so weight tracks provenance. */
+.constellation__item.is-shipped {
+  font-size: clamp(1.25rem, 1rem + 1.1vw, 2rem);
+  color: var(--fg);
+}
+.constellation__field:hover .constellation__item {
+  opacity: 0.4;
+}
+.constellation__field .constellation__item:hover,
+.constellation__field .constellation__item:focus-visible,
+.constellation__item.is-active {
+  opacity: 1;
+  color: var(--accent-ink);
+}
+.constellation__readout {
+  min-height: 4rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+}
+.constellation__readout-name {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+.constellation__readout-meta,
+.constellation__readout-hint {
+  margin-top: 0.35rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.constellation__shipped {
+  color: var(--accent-ink);
+}
+
+/* ── Record ────────────────────────────────────────────────────────────── */
+
+.lab-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3rem;
+  margin-top: 3.5rem;
+}
+@media (min-width: 64rem) {
+  .lab-record {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3.5rem;
+  }
+}
+.lab-record__head {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.lab-record__list,
+.lab-record__issuers,
+.lab-record__posts {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+.lab-record__role,
+.lab-record__title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.25;
+}
+.lab-record__org,
+.lab-record__meta,
+.lab-record__date {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+.lab-record__meta,
+.lab-record__date {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+}
+.lab-record__issuers li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.lab-record__issuer {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+}
+.lab-record__count {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  color: var(--accent-ink);
+}
+.lab-record__posts a {
+  display: grid;
+  gap: 0.35rem;
+  transition: color 0.3s ease;
+}
+.lab-record__posts a:hover .lab-record__title {
+  color: var(--accent-ink);
+}
+.lab-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--link);
+}
+.lab-inline-link:hover {
+  text-decoration: underline;
+}
+.lab-inline-link svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+/* ── Contact ───────────────────────────────────────────────────────────── */
+
+.lab-availability {
+  max-width: 46rem;
+  margin-top: 2.5rem;
+  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.375rem);
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+.lab-availability strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.lab-channels {
+  list-style: none;
+  margin: 3.5rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.lab-channels a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.5rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--rule);
+  transition: color 0.3s ease, padding-left 0.35s var(--ease-out-quint);
+}
+.lab-channels a:hover {
+  color: var(--accent-ink);
+  padding-left: 0.75rem;
+}
+.lab-channel__label {
+  min-width: 7rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.lab-channel__value {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.125rem, 1rem + 0.8vw, 1.5rem);
+  font-weight: 700;
+  color: inherit;
+}
+.lab-channels svg {
+  width: 1rem;
+  height: 1rem;
+  margin-left: auto;
+  color: var(--fg-muted);
+}
+
+.lab-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-top: 4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.lab-foot .lab-inline-link {
+  margin-top: 0;
+}
+
+/* ── HUD ───────────────────────────────────────────────────────────────── */
+
+.lab-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.lab-hud > * {
+  pointer-events: auto;
+}
+.lab-hud__mark {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.lab-hud__mark-pg {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.lab-hud__mark-back {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.3s var(--ease-out-quint), transform 0.3s var(--ease-out-quint);
+}
+.lab-hud__mark:hover .lab-hud__mark-back,
+.lab-hud__mark:focus-visible .lab-hud__mark-back {
+  opacity: 1;
+  transform: none;
+}
+
+.lab-hud__right {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.lab-hud__menu,
+.lab-hud__theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--fg);
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+.lab-hud__theme {
+  padding: 0.5rem;
+}
+.lab-hud__menu:hover,
+.lab-hud__theme:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.lab-hud__icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.lab-hud__icon--moon {
+  display: none;
+}
+.dark .lab-hud__icon--sun {
+  display: none;
+}
+.dark .lab-hud__icon--moon {
+  display: block;
+}
+
+/**
+ * The two bottom readouts sit over scrolling content, so they need a surface of
+ * their own — without one, "08 WORKFORCEIQ" lands on top of a paragraph and
+ * both become unreadable. Same pill material as the menu button, so the four
+ * corners read as one instrument panel rather than as three chrome elements and
+ * two floating strings.
+ */
+.lab-hud__scroll,
+.lab-hud__status {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.lab-hud__scroll {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: end;
+  /* Grid items stretch by default, and column 1 is as wide as the widest thing
+     in it — so without this the pill spanned half the viewport. */
+  justify-self: start;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+.lab-hud__index {
+  color: var(--accent-ink);
+}
+.lab-hud__status {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+  align-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The corner readouts are noise on a phone — the menu button is what matters. */
+@media (max-width: 47.99rem) {
+  .lab-hud__scroll,
+  .lab-hud__status,
+  .lab-hud__mark-back {
+    display: none;
+  }
+}
+
+/* ── Fullscreen menu ───────────────────────────────────────────────────── */
+
+.lab-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+  padding: clamp(1.5rem, 6vw, 5rem);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  transition: opacity 0.32s var(--ease-out-quint), visibility 0s linear 0.32s;
+}
+.lab-menu[data-open="false"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lab-menu[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.lab-menu__close {
+  position: absolute;
+  top: clamp(1rem, 2.5vw, 1.75rem);
+  right: clamp(1rem, 2.5vw, 1.75rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9999px;
+  background: transparent;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg);
+  cursor: pointer;
+}
+.lab-menu__esc {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.25rem;
+  color: var(--fg-muted);
+  text-transform: lowercase;
+}
+.lab-menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lab-menu__item {
+  transition: opacity 0.4s var(--ease-out-quint), transform 0.4s var(--ease-out-quint);
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .lab-menu[data-open="false"] .lab-menu__item {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.lab-menu[data-open="true"] .lab-menu__item {
+  opacity: 1;
+  transform: none;
+}
+.lab-menu__link {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding: 0.4rem 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.875rem, 1rem + 4.4vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--fg-muted);
+  transition: color 0.28s var(--ease-out-quint);
+}
+.lab-menu__link:hover,
+.lab-menu__link:focus-visible,
+.lab-menu__link[aria-current="location"] {
+  color: var(--fg);
+}
+.lab-menu__num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  color: var(--accent-ink);
+}
+.lab-menu__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.lab-menu__out {
+  color: var(--fg);
+}
+.lab-menu__out:hover {
+  color: var(--accent-ink);
+}
+.lab-menu__socials {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--fg-muted);
+}
+.lab-menu__socials a:hover {
+  color: var(--accent-ink);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The flow dots are the one purely decorative motion here. Park them at the
+     start of their path rather than hiding them, so the diagram still reads as
+     directional. */
+  .sysgraph__flow {
+    animation: none;
+    offset-distance: 0%;
+  }
+  .lab-menu__item,
+  .lab-hud__mark-back {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+}

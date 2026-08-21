@@ -1135,13 +1135,40 @@ font {
   }
 }
 
+/**
+ * PAGE ENTER — opacity only, and the missing `transform` is the whole point.
+ *
+ * This used to be `from { opacity: 0; transform: translateY(8px) }`, which was
+ * a site-wide trap rather than a local choice. `template.tsx` wraps EVERY page
+ * in `.animate-page-enter`, and an element with a transform other than `none`
+ * becomes the containing block for every `position: fixed` descendant inside
+ * it. With `forwards` the final `translateY(0)` persisted, so the trap stayed
+ * armed for the life of the page.
+ *
+ * Nothing on the site noticed for a long time, because all of its fixed chrome
+ * — navbar, footer, scroll progress — lives in the LAYOUT, outside the
+ * template. The first page to put fixed elements in the PAGE (/lab) broke
+ * immediately and silently: its HUD and fullscreen menu sized themselves to the
+ * full document instead of the viewport, rendering an open menu ~3800px below
+ * the fold. It looked like an empty menu, not like a positioning bug.
+ *
+ * Patching that one route would have left the trap set for the next one. So the
+ * transform is gone instead. What was lost is an 8px slide almost nobody could
+ * perceive; what was gained is that `position: fixed` now means what it says
+ * anywhere on the site. `opacity` is safe here — it creates a stacking context,
+ * which is NOT the same thing as a containing block for fixed descendants.
+ *
+ * `forwards` is dropped too, and was never needed: the `to` state was identical
+ * to the element's natural state, so the fill mode was pinning a value that
+ * would have applied anyway.
+ */
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .animate-page-enter {
-  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /**

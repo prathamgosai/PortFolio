@@ -18,6 +18,13 @@ const ROUTES: { path: string; priority: number; changeFrequency: "monthly" | "ye
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.7, changeFrequency: "yearly" },
   { path: "/blog", priority: 0.7, changeFrequency: "monthly" },
+  /**
+   * /lab is indexed rather than noindex'd (unlike /noc), because it is a
+   * genuinely distinct page: its own copy, its own diagrams, its own canonical.
+   * It does restate facts the homepage also carries, so if it ever starts
+   * competing with `/` for the name query, this is the line to remove.
+   */
+  { path: "/lab", priority: 0.6, changeFrequency: "yearly" },
 ];
 
 /**

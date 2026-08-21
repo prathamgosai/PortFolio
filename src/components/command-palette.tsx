@@ -3,19 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import {
-  ArrowUpRight,
-  Copy,
-  FileText,
-  Home,
-  Layers,
-  Mail,
-  Moon,
-  PenLine,
-  Sun,
-  User,
-  Briefcase,
-} from "lucide-react";
+import { ArrowUpRight, Briefcase, Copy, FileText, Home, Layers, Mail, Moon, PenLine, Sparkles, Sun, User } from "lucide-react";
 import { identity } from "@/data/portfolio";
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
 
@@ -70,6 +58,15 @@ export function CommandPalette() {
       { id: "experience", label: "Experience", group: "Navigate", icon: Briefcase, run: go("/experience") },
       { id: "blog", label: "Blog", group: "Navigate", icon: PenLine, run: go("/blog") },
       { id: "contact", label: "Contact", group: "Navigate", icon: Mail, run: go("/contact") },
+      {
+        id: "lab",
+        label: "Lab",
+        hint: "Interactive systems view",
+        group: "Navigate",
+        keywords: "experiment interactive canvas systems diagram webgl visual",
+        icon: Sparkles,
+        run: go("/lab"),
+      },
       {
         id: "theme",
         label: resolvedTheme === "dark" ? "Switch to light theme" : "Switch to dark theme",
