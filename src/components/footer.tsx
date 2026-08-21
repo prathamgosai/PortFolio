@@ -3,7 +3,7 @@ import { identity } from "@/data/portfolio";
 
 export function Footer() {
   return (
-    <footer className="glass mt-24 border-x-0 border-b-0">
+    <footer className="glass glass-sky mt-24 border-x-0 border-b-0">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-14 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="t-card-title text-fg">{identity.name}</p>

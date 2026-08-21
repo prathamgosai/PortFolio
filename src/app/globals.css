@@ -877,6 +877,58 @@ body::before {
     inset 0 -1px 0 rgba(0, 0, 0, 0.25),
     0 14px 40px -18px rgba(0, 0, 0, 0.65);
 }
+/**
+ * CHROME GLASS — the header pill and the footer, the two surfaces that sit
+ * directly over the rendered sky and are supposed to show it.
+ *
+ * A modifier rather than a change to `.glass` itself, because `.glass` is also
+ * the contact form, the FAQ rows, the command palette and the about/experience
+ * panels. Those sit over page content, not over the sky, and thinning them
+ * would cost legibility everywhere for a benefit only these two surfaces get.
+ *
+ * ── Opacity does the work, not blur ──
+ * The obvious guess is that the 16px backdrop blur was flattening the cloud.
+ * It was not, and the two were separated by changing only the blur on the dark
+ * theme while changing both on the light one. Reproducing the real compositor
+ * transform and measuring the luminance sd left in each band:
+ *
+ *   dark   blur 16 -> 8, tint unchanged   header sd 11.3 -> 11.7  (+3%)
+ *   light  blur 16 -> 8, tint .62 -> .46  header sd  4.3 ->  6.8  (+58%)
+ *                                         footer sd  6.9 -> 11.2  (+62%)
+ *
+ * So blur is worth a few percent and the tint is worth the rest. The blur
+ * reduction is kept because it sharpens what does get through, but if this ever
+ * needs to show more cloud, the tint is the knob.
+ *
+ * ── The tint is set by a contrast measurement, not by eye ──
+ * Both themes land on 46%, checked by running the real pipeline — sky at its
+ * boosted chrome-band alpha, composited over the page background, then this
+ * tint and blur over that — and reading the brightest 5% of the footer band,
+ * which is the worst ground the muted link text ever sits on:
+ *
+ *   dark   6.85 unboosted -> 5.59 at 55% tint -> 5.12 at 46%
+ *   light  6.87 unboosted -> 6.57 at 46%
+ *
+ * All well clear of AA's 4.5, so both themes can afford the same 46%.
+ *
+ * An earlier pass here had dark pinned at 55% on the strength of a figure of
+ * 4.4 that said it had no headroom at all. That figure was hand-computed and
+ * WRONG: it composited the tint straight onto a representative sky luminance
+ * and skipped the page background underneath, which made the backdrop look
+ * about two points brighter than it is. Measure this through the full pipeline
+ * or not at all.
+ */
+.glass-sky {
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(135%);
+  backdrop-filter: blur(8px) saturate(135%);
+}
+/* Specificity, not preference: `.dark .glass` (0,2,0) would otherwise beat
+   `.glass-sky` (0,1,0) and put the dark theme back to its 55% tint. */
+.dark .glass-sky {
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+}
+
 /* Diagonal sheen swept across the top — the "liquid" highlight. */
 .glass::before {
   content: "";

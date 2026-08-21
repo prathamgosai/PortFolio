@@ -135,10 +135,32 @@ function readTokens() {
     /**
      * The sun is warm in both themes and deliberately NOT the brand accent.
      * A blue sun is absurd; a sun the colour of the UI turns a light source
-     * into a logo. Pale gold by day, a low ember at night — warm, but nowhere
-     * near the saturated orange the palette just moved away from.
+     * into a logo.
+     *
+     * DEEP ORANGE, on an explicit request, replacing the pale gold/cream this
+     * used to be. Worth knowing why the pale version existed: an earlier
+     * palette paired a warm horizon with a warm sun and the entire night sky
+     * came out orange, so both were cooled. Only the horizon needed to be — the
+     * sun is a LOCAL light, and the shader has since pulled its scatter radius
+     * in from 1.25 to 0.62 so its warmth stays near the disc instead of grading
+     * the whole frame. That is what makes a saturated sun safe again.
+     *
+     * Still distinct from --accent (#ffb84d): this is redder and deeper, so the
+     * sun never reads as the brand mark. The disc itself is not this colour on
+     * screen — the shader burns a near-white core into it, because a bright sun
+     * with a deep-orange halo is exactly what a low sun looks like.
+     *
+     * DARK IS A MOON, not a dimmer sun. The two are different objects and the
+     * shader draws them differently (see uMoon) — this token only carries the
+     * colour. Cool pale white rather than the photographic ivory a full moon
+     * actually is, because against a near-black sky the eye reads a neutral
+     * disc as warm; biasing it blue is what makes it look like moonlight.
+     *
+     * It is also roughly twice the luminance of the orange sun, which is the
+     * right way round: a full moon is the brightest thing in a night sky by a
+     * wide margin, and the sky it sits in is dark enough to take it.
      */
-    sun: dark ? "#ffd8b0" : "#fff2d0",
+    sun: dark ? "#e8eef8" : "#ffa757",
     // The iridescence interpolates across these — all three are existing
     // design tokens, so the object can never show an off-palette colour.
     coral: v("--coral", dark ? "#ff8d99" : "#dd6f7c"),
@@ -235,6 +257,14 @@ export function ImmersiveScene() {
         // Stars belong to the night sky only — on the light theme they would
         // read as dust on the screen.
         uStars: { value: tokens.dark ? 1 : 0 },
+        /**
+         * Which body is in the sky: 0 = sun, 1 = moon. Shares its source with
+         * uStars — both are "is it night" — but stays a separate uniform,
+         * because they are separate decisions. A daytime moon is a real thing
+         * and starless night is a plausible art direction; collapsing the two
+         * into one flag would make either impossible to express.
+         */
+        uMoon: { value: tokens.dark ? 1 : 0 },
         uParallax: { value: 0 },
         uSunStory: { value: 1 },
       };
@@ -352,6 +382,7 @@ export function ImmersiveScene() {
         uniforms.uSun.value.set(tokens.sun);
         birdUniforms.uInk.value.set(tokens.dark ? "#0a0e16" : "#2b3644");
         uniforms.uStars.value = tokens.dark ? 1 : 0;
+        uniforms.uMoon.value = tokens.dark ? 1 : 0;
         dustUniforms.uTint.value.set(tokens.dark ? "#fff7e6" : "#8a5410");
         const blend = tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending;
         dustMat.blending = blend;

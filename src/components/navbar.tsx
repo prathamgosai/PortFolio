@@ -163,7 +163,7 @@ export function Navbar() {
        */}
       <nav
         aria-label="Main"
-        className="glass pointer-events-auto relative z-40 flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)] lg:max-w-5xl"
+        className="glass glass-sky pointer-events-auto relative z-40 flex w-full max-w-3xl items-center gap-1 rounded-full py-1.5 pl-2 pr-1.5 shadow-[var(--shadow-md)] lg:max-w-5xl"
       >
         {/**
          * Full legal name as the wordmark, per an explicit request.
