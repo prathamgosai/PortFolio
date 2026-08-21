@@ -12,8 +12,13 @@
   reason the reliability claims are credible rather than aspirational.
 - Lead with proof — real systems, real scale, verifiable certifications. Never
   with adjectives.
-- Calm confidence over hype. The visual language is engineering documentation:
-  rack hardware, schematic paper, an amber status LED.
+- Calm confidence over hype. The visual language began as engineering
+  documentation — rack hardware, schematic paper, an amber status LED — and the
+  enclosure and paper tones survive from it. The accent is now **azure**, and
+  the site sits inside a rendered sky: sun, cloud deck, and a flock of birds.
+  Amber against that read as a warning light bolted onto a landscape. The blue
+  is also the accessible choice: amber could not reach AA on the light canvas
+  at all, this clears 6:1.
 
 ## Core pages
 

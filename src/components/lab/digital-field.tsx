@@ -82,7 +82,7 @@ function readPalette(): Palette {
     dark,
     // On dark the points are light; on light they are ink. Same role, inverted.
     ink: dark ? "#f5f7fa" : "#0f1620",
-    accent: v("--accent", "#e39a2c"),
+    accent: v("--accent", "#ffb84d"),
     tech: v("--tech", dark ? "#4fd3ec" : "#0e7f96"),
     link: dark ? "255, 255, 255" : "15, 22, 32",
   };

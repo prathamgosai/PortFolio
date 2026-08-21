@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { Reveal } from "@/components/reveal";
 import { projects, learningInPublic } from "@/data/portfolio";
 
 /**
@@ -29,7 +30,7 @@ export function SelectedWork() {
     <section
       id="work"
       aria-labelledby="work-title"
-      className="mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
+      className="cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
     >
       <p className="label label-signal">Selected work</p>
       <h2 id="work-title" className="t-h2 mt-4 text-fg">
@@ -46,7 +47,16 @@ export function SelectedWork() {
           const isInternal = Boolean(project.caseStudy);
 
           return (
-            <li key={project.slug} className="work-row" data-cursor={href ? "View" : undefined}>
+            /* Staggered per row. 0.08s apart — far enough to read as a
+               sequence, close enough that the last row is not still arriving
+               when the eye has already reached it. */
+            <Reveal
+              key={project.slug}
+              as="li"
+              delay={i * 0.08}
+              className="reveal--card work-row"
+              cursor={href ? "View" : undefined}
+            >
               <div className="work-row__index">
                 <span aria-hidden>{String(i + 1).padStart(2, "0")}</span>
               </div>
@@ -131,7 +141,7 @@ export function SelectedWork() {
                   <ArrowUpRight className="h-5 w-5" />
                 ) : null}
               </div>
-            </li>
+            </Reveal>
           );
         })}
       </ol>

@@ -8,24 +8,16 @@ import {
   getSceneModeServer,
   subscribeSceneMode,
 } from "@/components/three/scene-mode";
+import { SKY_FRAG, SKY_VERT } from "@/components/three/cloud-sky";
 import {
-  buildTerrain,
-  TERRAIN_FRAG,
-  TERRAIN_VERT,
-} from "@/components/three/scene-geometry";
-import {
-  buildOrbits,
-  CORE,
-  CORE_FRAG,
-  CORE_VERT,
-  HALO_FRAG,
-  HALO_VERT,
-  LATTICE_FRAG,
-  LATTICE_VERT,
-  ORBIT_COUNT,
-  ORBIT_FRAG,
-  ORBIT_VERT,
-} from "@/components/three/core-object";
+  BIRD_FRAG,
+  BIRD_VERT,
+  buildDust,
+  buildFlock,
+  DUST_COUNT,
+  DUST_FRAG,
+  DUST_VERT,
+} from "@/components/three/birds";
 
 /**
  * ═════════════════════════════════════════════════════════════════════════
@@ -62,33 +54,20 @@ import {
  */
 
 /**
- * Per-route staging. Not just an opacity — the object is a different SIZE and
- * sits in a different place depending on what the page needs from it.
- *
- * On /lab the hero is a left-aligned column with an entirely empty right half,
- * so the core can be a genuine hero element at 1.6x. On the editorial routes
- * that same region holds the portrait card and body copy, so it shrinks and
- * pulls back to a halo behind them. Sizing one object for both would mean it is
- * too small to matter on one and in the way on the other.
+ * Per-route presence. Now that the scene is a sky rather than an object, this
+ * is a single number: how strongly the environment paints. /lab gets the full
+ * cloudscape; the editorial routes get it at 42%, where it reads as weather
+ * behind the page and never competes with body copy for contrast.
  */
-type Stage = { intensity: number; scale: number; x: number; y: number };
+type Stage = { intensity: number };
 
 function stageFor(pathname: string): Stage {
-  if (pathname.startsWith("/lab")) {
-    /**
-     * 1.15x, not the 1.6x this was first set to. At 1.6 the object genuinely
-     * read as a hero element — and also sat squarely on the metrics row and
-     * clipped off the right edge of the viewport. Big enough to be the subject,
-     * small enough to own its own space beside the text rather than under it.
-     */
-    return { intensity: 1, scale: 1.15, x: 314, y: 300 };
-  }
-  if (pathname.startsWith("/noc")) {
-    return { intensity: 0, scale: 1, x: CORE.position[0], y: CORE.position[1] };
-  }
+  if (pathname.startsWith("/lab")) return { intensity: 1 };
+  if (pathname.startsWith("/noc")) return { intensity: 0 };
   // Editorial routes: present, never loud. Text wins.
-  return { intensity: 0.42, scale: 0.8, x: CORE.position[0], y: CORE.position[1] };
+  return { intensity: 0.42 };
 }
+
 
 /** Probe rather than assume. Some browsers report the API but fail to create. */
 function webglAvailable() {
@@ -122,7 +101,44 @@ function readTokens() {
   return {
     dark,
     ink: dark ? "#f5f7fa" : "#0f1620",
-    accent: v("--accent", "#e39a2c"),
+    accent: v("--accent", "#ffb84d"),
+    /**
+     * Cloudscape palette. Tinted to the site rather than to a photographic
+     * blue sky — the reference is a blue daylight scene, and dropping that
+     * behind an amber-on-schematic identity would read as a stock background
+     * someone pasted in. Dark is a night deck lit amber from below the horizon;
+     * light is a pale overcast on the existing paper tone.
+     */
+    /**
+     * The first dark palette was every value between #05 and #1c — technically
+     * a night sky, visually a black rectangle. A night cloudscape still needs
+     * cloud FORMS to read, so the deck sits well above the page background and
+     * the horizon carries a real amber glow to light it from below.
+     */
+    sky: dark ? "#080d18" : "#ccd9e6",
+    /**
+     * Dark horizon is dusk-violet, not the brown it was. A warm horizon plus a
+     * warm sun made the whole night sky read orange — the exact thing the
+     * palette was moved off. Cooling the sky lets the sun stay warm as a LOCAL
+     * light source, which is what a sun should be, without tinting everything.
+     */
+    /**
+     * Both horizons are now COOL. The light one was a warm cream (#f3e3cb) that
+     * filled the lower half of the frame and tinted the entire page tan — a
+     * golden-hour sky is lovely in isolation and wrong as a permanent
+     * background for a portfolio. Warmth now comes only from the sun itself,
+     * as a local light rather than a global grade.
+     */
+    horizon: dark ? "#2f3347" : "#e4ebf1",
+    cloud: dark ? "#222c3d" : "#b9c6d4",
+    light: dark ? "#8794a8" : "#ffffff",
+    /**
+     * The sun is warm in both themes and deliberately NOT the brand accent.
+     * A blue sun is absurd; a sun the colour of the UI turns a light source
+     * into a logo. Pale gold by day, a low ember at night — warm, but nowhere
+     * near the saturated orange the palette just moved away from.
+     */
+    sun: dark ? "#ffd8b0" : "#fff2d0",
     // The iridescence interpolates across these — all three are existing
     // design tokens, so the object can never show an off-palette colour.
     coral: v("--coral", dark ? "#ff8d99" : "#dd6f7c"),
@@ -182,192 +198,133 @@ export function ImmersiveScene() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearAlpha(0);
+      renderer.autoClear = false;
       host.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 1, 900);
       camera.position.set(0, 0, 120);
 
-      /* ── Geometry ─────────────────────────────────────────────────── */
+      /* ── Sky ──────────────────────────────────────────────────────── */
 
-      const gridPositions = buildTerrain(coarse.matches);
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.BufferAttribute(gridPositions, 3));
+      /**
+       * Its own scene and camera. The cloudscape is a fullscreen quad already
+       * in clip space, so it needs no camera transform at all — but Three still
+       * requires a camera to render, and giving it a dedicated pass means the
+       * perspective scene above can be cleared and drawn independently.
+       */
+      const skyScene = new THREE.Scene();
+      const skyCamera = new THREE.Camera();
 
       const uniforms = {
         uTime: { value: 0 },
         uScroll: { value: 0 },
-        uAmp: { value: 1 },
-        uSharp: { value: 0 },
-        uFar: { value: 3600 },
-        uInk: { value: new THREE.Color(tokens.ink) },
-        uAccent: { value: new THREE.Color(tokens.accent) },
         uOpacity: { value: 0 },
+        uAspect: { value: window.innerWidth / Math.max(window.innerHeight, 1) },
+        // Octave budget is the single biggest lever on fill cost here, and this
+        // shader runs per pixel across the whole viewport. Phones get three.
+        uOctaves: { value: coarse.matches ? 3 : 5 },
+        uSky: { value: new THREE.Color(tokens.sky) },
+        uHorizon: { value: new THREE.Color(tokens.horizon) },
+        uCloud: { value: new THREE.Color(tokens.cloud) },
+        uLight: { value: new THREE.Color(tokens.light) },
+        uSun: { value: new THREE.Color(tokens.sun) },
+        // Upper left, above the deck. Off-centre so the sky has a direction —
+        // a sun dead centre flattens the whole scene into a target.
+        uSunPos: { value: new THREE.Vector2(0.22, 0.80) },
+        // Stars belong to the night sky only — on the light theme they would
+        // read as dust on the screen.
+        uStars: { value: tokens.dark ? 1 : 0 },
+        uParallax: { value: 0 },
+        uSunStory: { value: 1 },
       };
 
       const material = new THREE.ShaderMaterial({
         uniforms,
-        vertexShader: TERRAIN_VERT,
-        fragmentShader: TERRAIN_FRAG,
+        vertexShader: SKY_VERT,
+        fragmentShader: SKY_FRAG,
         transparent: true,
-        depthWrite: false,
-        /**
-         * Additive on dark so crossing contours accumulate into brighter
-         * ridges, the way a light source would. On a near-white canvas additive
-         * blows straight out to white, so light composites normally and the
-         * lines read as ink instead.
-         */
-        blending: tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending,
-      });
-
-      const terrain = new THREE.LineSegments(geometry, material);
-      scene.add(terrain);
-
-      /* ── The Core ─────────────────────────────────────────────────── */
-
-      const coreUniforms = {
-        uTime: uniforms.uTime,
-        uPulse: { value: 1 },
-        uAccent: { value: new THREE.Color(tokens.accent) },
-        uCoral: { value: new THREE.Color(tokens.coral) },
-        uTech: { value: new THREE.Color(tokens.tech) },
-        uOpacity: { value: 0 },
-      };
-
-      /**
-       * Detail 4 on a coarse pointer would be ~5k triangles for an object that
-       * is a third of the size on screen. The silhouette is what reads; the
-       * tessellation only has to be fine enough that the noise displacement
-       * does not facet.
-       */
-      const coreGeo = new THREE.IcosahedronGeometry(CORE.radius, coarse.matches ? 3 : 5);
-      const coreMat = new THREE.ShaderMaterial({
-        uniforms: coreUniforms,
-        vertexShader: CORE_VERT,
-        fragmentShader: CORE_FRAG,
-        transparent: true,
-        depthWrite: false,
-        /**
-         * FrontSide, not DoubleSide. With additive blending, DoubleSide draws
-         * the back of the shell and then the front on top of it, and the two
-         * fresnel terms sum — which saturated alpha across the whole silhouette
-         * and turned a hollow rim-lit shell into an opaque ball. One face only.
-         */
-        side: THREE.FrontSide,
-        blending: tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending,
-      });
-      const core = new THREE.Mesh(coreGeo, coreMat);
-
-      const latticeUniforms = {
-        uTime: uniforms.uTime,
-        uInk: uniforms.uInk,
-        uAccent: coreUniforms.uAccent,
-        uOpacity: { value: 0 },
-      };
-      // Low detail on purpose: a geodesic cage wants to read as struts, and
-      // subdividing it turns the shell into a solid grey ball.
-      // 1.08x, not 1.22x: the cage should hug the body like a containment
-      // shell. Further out it stops reading as related to the object at all and
-      // becomes a separate spiky polygon floating nearby.
-      const latticeGeo = new THREE.WireframeGeometry(
-        new THREE.IcosahedronGeometry(CORE.radius * 1.08, 2),
-      );
-      const latticeMat = new THREE.ShaderMaterial({
-        uniforms: latticeUniforms,
-        vertexShader: LATTICE_VERT,
-        fragmentShader: LATTICE_FRAG,
-        transparent: true,
-        depthWrite: false,
-        blending: tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending,
-      });
-      const lattice = new THREE.LineSegments(latticeGeo, latticeMat);
-
-      /* Halo — the light the body spills. Drawn first, behind everything. */
-      const haloUniforms = {
-        uAccent: coreUniforms.uAccent,
-        uCoral: coreUniforms.uCoral,
-        uOpacity: { value: 0 },
-      };
-      const haloGeo = new THREE.PlaneGeometry(CORE.radius * 6.4, CORE.radius * 6.4);
-      const haloMat = new THREE.ShaderMaterial({
-        uniforms: haloUniforms,
-        vertexShader: HALO_VERT,
-        fragmentShader: HALO_FRAG,
-        transparent: true,
-        depthWrite: false,
         depthTest: false,
-        // Always additive, both themes. A halo is light; on the light canvas it
-        // simply reads as a warm bloom rather than a grey disc.
-        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      skyScene.add(new THREE.Mesh(geometry, material));
+
+      /* ── Birds ────────────────────────────────────────────────────── */
+
       /**
-       * The halo is a SIBLING of the core group, not a child, and that is
-       * structural rather than tidiness.
-       *
-       * To face the camera it needs its world quaternion set to the camera's.
-       * As a child of a group that is itself rotating on two axes, setting its
-       * local quaternion would be composed with the parent's — so it would
-       * tumble with the object instead of facing front, and a billboard that
-       * tumbles reveals itself as a flat quad. Kept as a sibling, its local
-       * space IS world space and the copy is exact. Its transform is synced to
-       * the group each frame.
+       * The glowing core object that used to sit here is gone. It was a
+       * signature element for a scene that no longer exists: against a sky with
+       * a sun in it, a luminous lattice sphere read as a second, competing
+       * light source with no reason to be there. The sky is the subject now.
        */
-      const halo = new THREE.Mesh(haloGeo, haloMat);
-      halo.renderOrder = -1;
-      scene.add(halo);
+      const flock = buildFlock();
+      const birdGeo = new THREE.BufferGeometry();
+      birdGeo.setAttribute("position", new THREE.BufferAttribute(flock.position, 3));
+      birdGeo.setAttribute("aSide", new THREE.BufferAttribute(flock.side, 1));
+      birdGeo.setAttribute("aTip", new THREE.BufferAttribute(flock.tip, 1));
+      birdGeo.setAttribute("aPhase", new THREE.BufferAttribute(flock.phase, 1));
+      birdGeo.setAttribute("aSpeed", new THREE.BufferAttribute(flock.speed, 1));
+      birdGeo.setAttribute("aScale", new THREE.BufferAttribute(flock.scale, 1));
+      birdGeo.setAttribute("aPath", new THREE.BufferAttribute(flock.path, 3));
+      // Positions are computed in the shader, so the derived bounding sphere
+      // would be a point at the origin and the whole flock would be culled.
+      birdGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 100);
 
-      /* Orbiting nodes. */
-      const orbits = buildOrbits(CORE.radius);
-      const orbitGeo = new THREE.BufferGeometry();
-      // `position` is required by Three even though the vertex shader computes
-      // the real location from the orbital parameters — it is never read.
-      orbitGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(ORBIT_COUNT * 3), 3));
-      orbitGeo.setAttribute("aRadius", new THREE.BufferAttribute(orbits.radii, 1));
-      orbitGeo.setAttribute("aSpeed", new THREE.BufferAttribute(orbits.speeds, 1));
-      orbitGeo.setAttribute("aPhase", new THREE.BufferAttribute(orbits.phases, 1));
-      orbitGeo.setAttribute("aSize", new THREE.BufferAttribute(orbits.sizes, 1));
-      orbitGeo.setAttribute("aAxis", new THREE.BufferAttribute(orbits.axes, 3));
-      // The computed positions leave the default bounding sphere at radius 0,
-      // so frustum culling would drop the whole cloud the moment the group's
-      // origin left the view.
-      orbitGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), CORE.radius * 2.2);
+      const birdUniforms = {
+        uTime: uniforms.uTime,
+        uAspect: uniforms.uAspect,
+        // Birds are silhouettes: dark on the light sky, and still dark on the
+        // night sky, where they read against the lit cloud tops.
+        uInk: { value: new THREE.Color(tokens.dark ? "#0a0e16" : "#2b3644") },
+        uOpacity: { value: 0 },
+      };
+      const birdMat = new THREE.ShaderMaterial({
+        uniforms: birdUniforms,
+        vertexShader: BIRD_VERT,
+        fragmentShader: BIRD_FRAG,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      // Drawn in the sky pass — they belong to the backdrop, not to the
+      // perspective scene, and their vertex shader already emits clip space.
+      skyScene.add(new THREE.Mesh(birdGeo, birdMat));
 
-      const orbitUniforms = {
+      /* ── Atmospheric dust ─────────────────────────────────────────── */
+
+      const dust = buildDust();
+      const dustGeo = new THREE.BufferGeometry();
+      dustGeo.setAttribute("position", new THREE.BufferAttribute(dust.position, 3));
+      dustGeo.setAttribute("aSeed", new THREE.BufferAttribute(dust.seed, 1));
+      dustGeo.setAttribute("aSize", new THREE.BufferAttribute(dust.size, 1));
+      dustGeo.setAttribute("aDepth", new THREE.BufferAttribute(dust.depth, 1));
+      dustGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 100);
+
+      const dustUniforms = {
         uTime: uniforms.uTime,
         uDpr: { value: renderer.getPixelRatio() },
-        uAccent: coreUniforms.uAccent,
+        uParallax2: { value: new THREE.Vector2() },
+        uTint: { value: new THREE.Color(tokens.dark ? "#fff7e6" : "#8a5410") },
         uOpacity: { value: 0 },
       };
-      const orbitMat = new THREE.ShaderMaterial({
-        uniforms: orbitUniforms,
-        vertexShader: ORBIT_VERT,
-        fragmentShader: ORBIT_FRAG,
+      const dustMat = new THREE.ShaderMaterial({
+        uniforms: dustUniforms,
+        vertexShader: DUST_VERT,
+        fragmentShader: DUST_FRAG,
         transparent: true,
+        depthTest: false,
         depthWrite: false,
+        // Motes are lit specks on the dark theme, so they add light there and
+        // composite normally on the light one.
         blending: tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending,
       });
-      const orbitNodes = new THREE.Points(orbitGeo, orbitMat);
-
-      const coreGroup = new THREE.Group();
-      coreGroup.add(core, lattice, orbitNodes);
-      coreGroup.position.set(CORE.position[0], CORE.position[1], CORE.position[2]);
-      scene.add(coreGroup);
-
-      /**
-       * Camera sits above the surface looking along it, which is what produces
-       * a horizon. A top-down view would show the noise but none of the relief;
-       * the low angle is the entire reason this reads as landscape.
-       */
-      /**
-       * Pitched UP, not down. A camera aimed at the ground puts the horizon
-       * high in the frame and the surface then runs straight through the body
-       * copy. Aiming above the horizon drops it to roughly three-quarters down,
-       * which leaves the whole upper frame clean for type and turns the terrain
-       * into a base the content sits on. Geometry unchanged — this is purely
-       * where it is pointed.
-       */
-      camera.position.set(0, 130, 520);
-      camera.lookAt(0, 520, -1400);
+      const dustPoints = new THREE.Points(dustGeo, dustMat);
+      // Drawn last in the sky pass: this is the foreground layer.
+      dustPoints.renderOrder = 2;
+      skyScene.add(dustPoints);
+      void DUST_COUNT;
 
       /* ── Drive ────────────────────────────────────────────────────── */
 
@@ -385,27 +342,21 @@ export function ImmersiveScene() {
        */
       let elapsed = 0;
       let lastFrame = 0;
-      // Eased toward the route's stage each frame — see the frame loop.
-      let stageScale = stageRef.current.scale;
-      let stageX = stageRef.current.x;
-      let stageY = stageRef.current.y;
 
       function applyTokens() {
         tokens = readTokens();
-        uniforms.uInk.value.set(tokens.ink);
-        uniforms.uAccent.value.set(tokens.accent);
-        coreUniforms.uAccent.value.set(tokens.accent);
-        coreUniforms.uCoral.value.set(tokens.coral);
-        coreUniforms.uTech.value.set(tokens.tech);
+        uniforms.uSky.value.set(tokens.sky);
+        uniforms.uHorizon.value.set(tokens.horizon);
+        uniforms.uCloud.value.set(tokens.cloud);
+        uniforms.uLight.value.set(tokens.light);
+        uniforms.uSun.value.set(tokens.sun);
+        birdUniforms.uInk.value.set(tokens.dark ? "#0a0e16" : "#2b3644");
+        uniforms.uStars.value = tokens.dark ? 1 : 0;
+        dustUniforms.uTint.value.set(tokens.dark ? "#fff7e6" : "#8a5410");
         const blend = tokens.dark ? THREE.AdditiveBlending : THREE.NormalBlending;
-        material.blending = blend;
-        coreMat.blending = blend;
-        latticeMat.blending = blend;
-        orbitMat.blending = blend;
-        orbitMat.needsUpdate = true;
+        dustMat.blending = blend;
+        dustMat.needsUpdate = true;
         material.needsUpdate = true;
-        coreMat.needsUpdate = true;
-        latticeMat.needsUpdate = true;
       }
 
       function frame() {
@@ -429,8 +380,8 @@ export function ImmersiveScene() {
          * copy is the thing that makes people close the tab.
          */
         camera.position.x = pointer.x * 40;
-        camera.position.y = 130 - pointer.y * 22;
-        camera.lookAt(pointer.x * 12, 520, -1400);
+        camera.position.y = -pointer.y * 26;
+        camera.lookAt(pointer.x * 12, -pointer.y * 8, -600);
 
         /**
          * Mode weights, read straight from the module store — no React in this
@@ -442,61 +393,51 @@ export function ImmersiveScene() {
         const ease = (u: { value: number }, to: number) => {
           u.value += (to - u.value) * 0.03;
         };
-        ease(uniforms.uSharp, active === "lattice" ? 1 : 0);
-        ease(
-          uniforms.uAmp,
-          active === "converge" ? 0.45 : active === "calm" ? 0.3 : 1,
-        );
+        // The sky has no per-section morph; /lab's modes are expressed by the
+        // page itself now, so the store is read only to keep the fallback in
+        // sync. `active` stays referenced deliberately — see the 2D field.
+        void active;
+        void ease;
+
+        const target = stageRef.current.intensity;
 
         /**
-         * Everything the route controls is EASED, never assigned. A client-side
-         * navigation between /lab and an editorial page therefore reads as the
-         * object growing and settling into its new place, which is the whole
-         * payoff for the scene living in the layout instead of the page.
+         * The sky is the page's backdrop, not an overlay on it, so its ceiling
+         * is 1 — at 0.5 it half-blended with --bg underneath and the cloud
+         * forms washed out to nothing. Route intensity still scales it, which
+         * is what keeps it an atmospheric hint on the editorial pages.
          */
-        const stage = stageRef.current;
-        const target = stage.intensity;
-        stageScale += (stage.scale - stageScale) * 0.045;
-        stageX += (stage.x - stageX) * 0.045;
-        stageY += (stage.y - stageY) * 0.045;
-
-        // Fade to the route's ceiling rather than snapping — this also covers
-        // the first frames after boot, so the scene arrives instead of popping.
-        const ceiling = (tokens.dark ? 0.5 : 0.42) * target;
-        uniforms.uOpacity.value += (ceiling - uniforms.uOpacity.value) * 0.035;
+        uniforms.uOpacity.value += (target - uniforms.uOpacity.value) * 0.035;
+        // Birds fade in behind the sky so they never arrive before the air does.
+        birdUniforms.uOpacity.value += (target * 0.9 - birdUniforms.uOpacity.value) * 0.03;
+        // Dust is the faintest layer in the stack, by a wide margin.
+        dustUniforms.uOpacity.value += (target * 0.5 - dustUniforms.uOpacity.value) * 0.03;
 
         /**
-         * The core rotates on two axes at unrelated rates, so it never returns
-         * to the same pose and never reads as a looping GIF. Scroll adds a slow
-         * drift so it stays alive on a page that is not being moused over.
+         * Layered parallax. Each layer gets a different multiplier off the same
+         * eased pointer, which is what produces depth rather than a uniform
+         * wobble: stars barely move, the sky moves a little, dust moves most.
          */
-        coreGroup.rotation.y = elapsed * 0.07 + scrollNorm * 1.5;
-        coreGroup.rotation.x = Math.sin(elapsed * 0.05) * 0.22 + scrollNorm * 0.5;
-        lattice.rotation.y = -elapsed * 0.05;
-        lattice.rotation.z = elapsed * 0.03;
-        // Rises slightly and drifts back as the page scrolls, so it belongs to
-        // the same space the terrain does.
-        coreGroup.position.y = stageY + scrollNorm * 140 - pointer.y * 18;
-        coreGroup.position.x = stageX + pointer.x * 26;
-        coreGroup.scale.setScalar(stageScale);
+        uniforms.uParallax.value = pointer.x * 0.06;
 
-        // Billboard: face the camera exactly, and track the core's transform.
-        halo.position.copy(coreGroup.position);
-        halo.quaternion.copy(camera.quaternion);
-        halo.scale.setScalar(stageScale);
+        /**
+         * The sun's arc across the page. `sin(progress * PI)` is 0 at both ends
+         * and 1 in the middle, so subtracting it gives full sun at the hero,
+         * softest through the body, and full sun again as the reader reaches
+         * the contact section — the horizon they started from.
+         */
+        uniforms.uSunStory.value = 1 - 0.45 * Math.sin(scrollNorm * Math.PI);
+        dustUniforms.uParallax2.value.set(pointer.x, -pointer.y);
 
-        // The core is the subject, so it is allowed to be far more present than
-        // the terrain — and it holds that presence on the editorial routes too,
-        // where `intensityRef` still scales it back.
-        const coreCeil = (tokens.dark ? 0.95 : 0.75) * target;
-        coreUniforms.uOpacity.value += (coreCeil - coreUniforms.uOpacity.value) * 0.03;
-        latticeUniforms.uOpacity.value += (coreCeil * 0.7 - latticeUniforms.uOpacity.value) * 0.03;
-        orbitUniforms.uOpacity.value += (coreCeil * 0.85 - orbitUniforms.uOpacity.value) * 0.03;
-        // The halo is held well down — it is spill light, and at full strength
-        // it washes the body it is supposed to be lighting.
-        haloUniforms.uOpacity.value +=
-          ((tokens.dark ? 0.2 : 0.12) * target - haloUniforms.uOpacity.value) * 0.03;
-
+        /**
+         * Two passes, one context. The sky (and the flock, which shares its
+         * clip-space pass) is drawn first with depth testing off; the depth
+         * buffer is then cleared so anything in the perspective scene
+         * composites over it. `autoClear` is off so pass two does not wipe one.
+         */
+        renderer.clear();
+        renderer.render(skyScene, skyCamera);
+        renderer.clearDepth();
         renderer.render(scene, camera);
       }
 
@@ -516,7 +457,10 @@ export function ImmersiveScene() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        orbitUniforms.uDpr.value = renderer.getPixelRatio();
+        // Aspect feeds both the sky's sun placement and the birds' scaling —
+        // miss it and the sun becomes an ellipse and the flock stretches.
+        uniforms.uAspect.value = window.innerWidth / Math.max(window.innerHeight, 1);
+        dustUniforms.uDpr.value = renderer.getPixelRatio();
       }
       function onScroll() {
         const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
@@ -578,14 +522,10 @@ export function ImmersiveScene() {
         themeObserver.disconnect();
         geometry.dispose();
         material.dispose();
-        coreGeo.dispose();
-        coreMat.dispose();
-        latticeGeo.dispose();
-        latticeMat.dispose();
-        haloGeo.dispose();
-        haloMat.dispose();
-        orbitGeo.dispose();
-        orbitMat.dispose();
+        birdGeo.dispose();
+        birdMat.dispose();
+        dustGeo.dispose();
+        dustMat.dispose();
         renderer.dispose();
         renderer.domElement.remove();
       };

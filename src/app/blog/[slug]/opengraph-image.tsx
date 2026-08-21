@@ -49,7 +49,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 width: "62px",
                 height: "62px",
                 borderRadius: "16px",
-                background: "#e39a2c",
+                background: "#ffb84d",
                 color: "#0f1620",
                 fontSize: 30,
                 fontWeight: 700,
@@ -67,7 +67,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", width: "64px", height: "6px", background: "#e39a2c", marginBottom: 26 }} />
+          <div style={{ display: "flex", width: "64px", height: "6px", background: "#ffb84d", marginBottom: 26 }} />
           <div
             style={{
               display: "flex",

@@ -16,6 +16,7 @@ export function Reveal({
   delay = 0,
   className = "",
   as: Tag = "div",
+  cursor,
 }: {
   children: ReactNode;
   /** Stagger, in seconds. */
@@ -23,6 +24,15 @@ export function Reveal({
   className?: string;
   /** Render as something other than a div — e.g. "li" inside a real list. */
   as?: Extract<ElementType, "div" | "li" | "section" | "article">;
+  /**
+   * Emits `data-cursor`, read by <CustomCursor/>.
+   *
+   * Exists so a revealed element can carry the label itself. The alternative —
+   * wrapping the content in another div — broke layout: the row it wraps is a
+   * grid, and an intervening `display: contents` element stops `.work-row > *`
+   * matching the real children, which is what lifts them above the hover wash.
+   */
+  cursor?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
 
@@ -48,6 +58,7 @@ export function Reveal({
   return (
     <Tag
       ref={ref as never}
+      data-cursor={cursor}
       className={`reveal ${className}`}
       style={delay ? { transitionDelay: `${delay}s` } : undefined}
     >

@@ -4,16 +4,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /**
- * Design tokens — "engineering documentation".
- * Palette is drawn from rack hardware: enclosure blue-black, schematic paper,
- * amber status LED, patch-cable blue. Amber is never used for body text
- * (it cannot hit AA on light); it carries the diagram and rules only.
+ * Design tokens.
+ * Enclosure blue-black and schematic paper survive from the original
+ * "engineering documentation" palette; the accent is now the sky the scene
+ * renders. Unlike the amber it replaced, this blue DOES hit AA on the light
+ * canvas, so `--signal-ink` is a refinement rather than a necessity.
  */
 :root {
   --enclosure: #0f1620;
   --schematic: #f2f5f7;
-  --signal: #e39a2c;
-  --signal-ink: #8a5410; /* AA-safe amber for text on light surfaces */
+  /**
+   * SIGNAL — the brand accent.
+   *
+   * Gold, and specifically the SUN's gold — the environment is a dark sky with
+   * a sun in it, and the accent is the light that sun casts. It briefly went
+   * azure when the sky was daylit; against a near-black cinematic backdrop that
+   * blue read as cold UI chrome floating in front of a warm scene.
+   *
+   * The constraint this creates is real and permanent: #ffb84d manages 1.6:1 on
+   * the light canvas, so it can NEVER be text there. It carries glow, rules,
+   * LEDs and diagram strokes only, and `--signal-ink` is the text weight. On
+   * the dark canvas — now the default — it clears 11:1 and needs no help.
+   */
+  --signal: #ffb84d;
+  --signal-ink: #845009; /* 6.1:1 on --schematic — the AA-safe text weight */
   --cable: #3d6fa8;
   --slate: #5a6773;
 
@@ -29,8 +43,26 @@
   --link: #2d5b8f;
 
   /* Warm accent family + glass + glow (light-mode values). */
-  --ember: #d9741f;
-  --gold: #e6a94d;
+  /* The gradient family: pale sky → signal → deep water. Reads as a sky
+     gradient rather than as three unrelated hues. */
+  --ember: #f59e0b;
+  --gold: #ffd37a;
+
+  /**
+   * DISPLAY-TEXT GRADIENT STOPS.
+   *
+   * Separate tokens from --gold/--ember on purpose. Those two also light the
+   * ambient orbs, where a pale value is exactly right — but the same pale value
+   * used as TEXT on the light canvas fails contrast badly. The old amber
+   * gradient managed 1.9:1 on its lightest stop and the first blue pass made it
+   * 1.7:1; both are far under the 3:1 that large display text needs.
+   *
+   * These are picked to clear 3:1 against --schematic at every stop, so the
+   * hero headline is legible rather than merely decorative.
+   */
+  --grad-a: #b0730d; /* 3.6:1 on --schematic */
+  --grad-b: #8a5410; /* 5.7:1 */
+  --grad-c: #96620c; /* 4.7:1 */
   --glass: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(15, 22, 32, 0.1);
   --glow: color-mix(in srgb, var(--signal) 30%, transparent);
@@ -110,18 +142,25 @@
  * generic blue/purple SaaS gradient.
  */
 .dark {
-  --bg: #07090f;
-  --surface: #10141c;
+  /* The brief's cinematic base. Deeper than the previous #07090f so the sun,
+     stars and rays have somewhere genuinely dark to sit against. */
+  --bg: #05070a;
+  --surface: #0d1117;
   --fg: #f5f7fa;
   --fg-muted: #9aa7b8;
   --rule: #1b2230;
   --wire: #46586c;
   --accent: var(--signal);
-  --accent-ink: #f4bd6a; /* AA-safe amber for text on the dark canvas */
+  --accent-ink: #ffd37a; /* 14.3:1 on the near-black canvas */
   --link: #8fb8ee;
 
-  --ember: #ff8a3d;
-  --gold: #ffc66b;
+  --ember: #ffb84d;
+  --gold: #fff7e6;
+
+  /* On the near-black canvas the constraint inverts: the stops must be LIGHT. */
+  --grad-a: #fff7e6;
+  --grad-b: #ffd37a;
+  --grad-c: #f59e0b;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glow: color-mix(in srgb, var(--signal) 55%, transparent);
@@ -455,7 +494,7 @@ body::before {
 /* Gradient text — reserved for a single important keyword. Warm amber→ember→gold
    so the accent reads as the signature light source, not a rainbow. */
 .text-gradient {
-  background: linear-gradient(100deg, var(--gold) 0%, var(--accent) 45%, var(--ember) 100%);
+  background: linear-gradient(100deg, var(--grad-a) 0%, var(--grad-b) 45%, var(--grad-c) 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -599,23 +638,95 @@ body::before {
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Scroll-in reveal. JS only sets data-shown; CSS does all the animating. */
+/**
+ * ── CINEMATIC REVEAL ──
+ *
+ * JS only ever sets `data-shown`; CSS does all the animating. The travel,
+ * scale and blur are custom properties so a variant can retune the same
+ * transition rather than redeclaring it — one timing curve for the whole site,
+ * many amplitudes.
+ */
 .reveal {
   transition:
-    opacity 0.55s var(--ease-out-quint),
-    transform 0.55s var(--ease-out-quint),
-    filter 0.55s var(--ease-out-quint);
+    opacity 0.7s var(--ease-out-quint),
+    transform 0.7s var(--ease-out-quint),
+    filter 0.7s var(--ease-out-quint);
 }
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    filter: blur(3px);
+    transform: translateY(var(--reveal-y, 28px)) scale(var(--reveal-s, 1));
+    filter: blur(var(--reveal-b, 4px));
   }
   .reveal[data-shown="true"] {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+}
+
+/**
+ * Card variant — further travel, a slight scale-up, more blur to burn off.
+ * Scale is what makes a card read as arriving from depth rather than sliding
+ * up a plane, and it is kept at 0.96 because anything lower reads as a popup.
+ */
+.reveal--card {
+  --reveal-y: 40px;
+  --reveal-s: 0.965;
+  --reveal-b: 8px;
+}
+
+/**
+ * Mobile halves the distances. A 40px rise on a 640px-tall viewport is a
+ * proportionally enormous move, and a phone showing four staggered cards at
+ * once turns that into visible churn. Blur is cut hardest — it is the most
+ * expensive property here and the least missed at this size.
+ */
+@media (max-width: 47.99rem) {
+  .reveal {
+    --reveal-y: 16px;
+    --reveal-b: 2px;
+    transition-duration: 0.5s;
+  }
+  .reveal--card {
+    --reveal-y: 22px;
+    --reveal-s: 0.98;
+    --reveal-b: 3px;
+  }
+}
+
+/**
+ * ── FADE-OUT ON EXIT ──
+ *
+ * Content receding as it leaves the top of the viewport, so scrolling feels
+ * like travelling through the environment rather than sliding a document.
+ *
+ * Driven entirely by `animation-timeline: view()` — no observer, no scroll
+ * handler, no JavaScript at all, and it runs off the main thread. That is only
+ * possible because this is DECORATION: where the feature is unsupported
+ * (Firefox stable, still behind a flag) the element simply stays fully visible,
+ * which is a perfectly good result. Nothing here gates state on it.
+ *
+ * NOT applied to any section containing `position: sticky` — the animation
+ * applies a transform, and a transformed ancestor becomes the containing block
+ * for sticky descendants, which would break the journey timeline's pinned rail.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cine-exit {
+      animation: cine-exit linear both;
+      animation-timeline: view();
+      /* Only over the exit phase, and stopping at 85% so content is never fully
+         gone while any of it is still on screen. */
+      animation-range: exit 0% exit 85%;
+    }
+  }
+}
+@keyframes cine-exit {
+  to {
+    opacity: 0.2;
+    filter: blur(6px);
+    transform: translateY(-30px);
   }
 }
 
@@ -2699,11 +2810,25 @@ a[href^="mailto:"],
  * only depth the page has) but are pulled right back when the scene is running,
  * which the scene signals by putting `data-scene="on"` on <html>.
  */
+/**
+ * Retired outright while the sky is running.
+ *
+ * These two layers — the `body::before` radial and the aurora orbs — are the
+ * site's ORIGINAL atmosphere, from before there was a rendered sky. Both are
+ * tinted with `--glow`, which derives from `--signal`; now that the accent is
+ * sun-gold they were painting a large warm wash across the top of every page,
+ * on top of the sun's own light. That double warmth is what made the whole
+ * background read orange, and no amount of tuning inside the shader could fix
+ * it because two of the three sources were in CSS.
+ *
+ * They are not deleted, only suppressed: on the no-WebGL path they are still
+ * the only atmosphere the page has, and there they are exactly right.
+ */
 html[data-scene="on"] .ambient-orb {
-  opacity: 0.07;
+  opacity: 0;
 }
-html[data-scene="on"].dark .ambient-orb {
-  opacity: 0.16;
+html[data-scene="on"] body::before {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

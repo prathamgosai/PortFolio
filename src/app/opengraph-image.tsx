@@ -32,7 +32,7 @@ export default function Image() {
               width: "84px",
               height: "84px",
               borderRadius: "20px",
-              background: "#e39a2c",
+              background: "#ffb84d",
               color: "#0f1620",
               fontSize: 40,
               fontWeight: 700,
@@ -46,7 +46,7 @@ export default function Image() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", width: "72px", height: "6px", background: "#e39a2c", marginBottom: 28 }} />
+          <div style={{ display: "flex", width: "72px", height: "6px", background: "#ffb84d", marginBottom: 28 }} />
           <div style={{ display: "flex", fontSize: 78, fontWeight: 700, color: "#eef2f6", letterSpacing: "-0.02em" }}>
             {identity.name}
           </div>
@@ -55,7 +55,7 @@ export default function Image() {
           </div>
         </div>
 
-        <div style={{ display: "flex", fontSize: 22, color: "#e39a2c", letterSpacing: "0.14em" }}>
+        <div style={{ display: "flex", fontSize: 22, color: "#ffb84d", letterSpacing: "0.14em" }}>
           SURAT, INDIA · WORKFORCEIQ · CLAUDE API
         </div>
       </div>
