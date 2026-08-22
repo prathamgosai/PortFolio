@@ -66,6 +66,10 @@
   --glass: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(15, 22, 32, 0.1);
   --glow: color-mix(in srgb, var(--signal) 30%, transparent);
+  /* The glow that FOLLOWS THE POINTER (cursor spotlight, hero glow). Split
+     from --glow so it can change temperature per theme without dragging the
+     static ambers — the pulse dot, nav hovers, the page-top wash — with it. */
+  --glow-pointer: var(--glow);
 
   /**
    * ON-GLASS TOKENS.
@@ -164,6 +168,18 @@
   --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glow: color-mix(in srgb, var(--signal) 55%, transparent);
+  /**
+   * The pointer glow goes WHITE at night, on an explicit request. The night
+   * scene is lit by a moon, and a warm amber pool following the mouse read as
+   * a second light source with no business being there — the same reasoning
+   * that turned the cursor dot itself white. --fg rather than pure white keeps
+   * it on the theme's own cool near-white, i.e. moonlight rather than a torch.
+   *
+   * 32%, not the amber's 55%: white carries roughly twice the luminance of
+   * #ffb84d on this canvas, so matching the percentage would double the
+   * apparent brightness of the pool.
+   */
+  --glow-pointer: color-mix(in srgb, var(--fg) 32%, transparent);
 
   /* On-glass tokens — the dark half of the pair documented in :root.
      --enclosure is not redefined here, so these are literal rather than
@@ -532,13 +548,39 @@ body::before {
   isolation: isolate;
   overflow: clip;
 }
-/* Amber light that follows the cursor across the hero (--mx/--my via JS). */
+/**
+ * Amber light that follows the cursor across the hero (--mx/--my via JS).
+ *
+ * ── The mask is not decoration, it is the fix for a visible seam ──
+ *
+ * `.hero-cinematic` above is `overflow: clip`, so this element is cut off dead
+ * straight at the hero's own bounds. That is invisible while the cursor is near
+ * the middle and obvious the moment it is not: the glow is ~326px across and
+ * the hero edge is a hard line, so pointing anywhere near the side of the hero
+ * guillotined the amber and left a razor-straight warm/cool border down the
+ * page. Measured, it stepped 21 points of (R − B) across a single pixel at
+ * x = 144 — the exact left edge of the hero box.
+ *
+ * A mask fades the glow to nothing before it can reach the clip, so there is
+ * never an edge for the clip to expose. Same technique as `.tech-grid` above,
+ * and for the same reason.
+ *
+ * `inset` went from -10% to 0 as part of this, and that is a correctness fix in
+ * its own right. --mx/--my are written as percentages of the HERO's rect, but
+ * they were being resolved against a box 20% larger — so the glow never sat
+ * under the cursor, it tracked at 1.2x and lagged toward the centre. It also
+ * has to be 0 for the mask to line up with the clip at all.
+ */
 .hero-glow {
   position: absolute;
-  inset: -10%;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(34rem 28rem at var(--mx) var(--my), var(--glow), transparent 60%);
+  background: radial-gradient(34rem 28rem at var(--mx) var(--my), var(--glow-pointer), transparent 60%);
+  /* Radii of exactly 50% put the transparent stop ON the box edge — any larger
+     and the fade never completes inside the box, which is the whole point. */
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 0%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 0%, #000 58%, transparent 100%);
 }
 /**
  * Decorative floating glass orbs.
@@ -1972,6 +2014,205 @@ font {
 } /* end @layer components */
 /**
  * ═════════════════════════════════════════════════════════════════════════
+ * SYSTEM GRAPH
+ * ═════════════════════════════════════════════════════════════════════════
+ *
+ * Lifted out of lab.css, because the component is no longer a /lab component —
+ * both diagrams now also run on the home page, and lab.css is imported by
+ * /lab's page alone.
+ *
+ * It lives HERE rather than in a stylesheet next to the component, and the
+ * reason is in Next's own CSS docs: a global stylesheet imported from a route
+ * is not removed again when you navigate away from that route, so shipping the
+ * same rules from two entry points is a documented way to get conflicts.
+ * globals.css is loaded once by the root layout and never swapped, which side-
+ * steps that entirely. The component also sits in src/components rather than
+ * under app/, which is not where the docs sanction a global import from.
+ */
+
+/* ── System graph ──────────────────────────────────────────────────────── */
+
+.sysgraph {
+  margin-top: 3.5rem;
+}
+.sysgraph__stage {
+  position: relative;
+  width: 100%;
+}
+.sysgraph__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sysgraph__nodes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Mobile: the absolute positioning is dropped entirely and the same markup
+ * becomes a plain vertical list. Nothing is duplicated and nothing is hidden —
+ * a 1000-unit-wide diagram squeezed into 320px would be unreadable, and the
+ * nodes were always a list underneath.
+ */
+@media (max-width: 47.99rem) {
+  .sysgraph__svg {
+    display: none;
+  }
+  .sysgraph__nodes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .sysgraph__node-slot {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+  }
+  .sysgraph__node {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (min-width: 48rem) {
+  .sysgraph__stage {
+    /* Locked to the SVG's own aspect so node percentages and viewBox
+       coordinates describe the same space with zero measurement. */
+    aspect-ratio: 1000 / 560;
+  }
+  .sysgraph__nodes {
+    position: absolute;
+    inset: 0;
+  }
+  .sysgraph__node-slot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.sysgraph__edge {
+  fill: none;
+  stroke: var(--wire);
+  stroke-width: 1.25;
+  opacity: 0.45;
+  transition: opacity 0.35s var(--ease-out-quint), stroke 0.35s var(--ease-out-quint);
+}
+.sysgraph__edge.is-lit {
+  stroke: var(--accent);
+  opacity: 1;
+}
+
+.sysgraph__flow {
+  /**
+   * Blue, not amber.
+   *
+   * --tech is the palette's existing blue (#0e7f96 light, #4fd3ec dark) and is
+   * already what this site uses to mark anything technical, so the dots stay on
+   * palette in both themes without a new token. It also separates them from the
+   * edges and the lit node borders, which are amber — the dots are the one
+   * moving thing in the diagram, and giving them their own colour is what lets
+   * the eye follow a packet rather than reading the whole graph as one warm
+   * wash.
+   */
+  fill: var(--tech);
+  opacity: 0.55;
+  offset-rotate: 0deg;
+  animation: sysgraph-flow 2.6s linear infinite;
+  transition: opacity 0.35s var(--ease-out-quint);
+}
+.sysgraph__flow.is-lit {
+  opacity: 1;
+}
+@keyframes sysgraph-flow {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.sysgraph__node {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.3s var(--ease-out-quint),
+    box-shadow 0.3s var(--ease-out-quint),
+    transform 0.3s var(--ease-out-quint);
+}
+.sysgraph__node.is-primary {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.sysgraph__node:hover,
+.sysgraph__node.is-active,
+.sysgraph__node:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 14%, transparent);
+  transform: translateY(-2px);
+}
+.sysgraph__node-label {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.sysgraph__node-kind {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.sysgraph__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+  /* Reserved height — hovering a node must never reflow the page. */
+  min-height: 3.25rem;
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+}
+.sysgraph__readout-label {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+}
+.sysgraph__readout-detail,
+.sysgraph__readout-hint {
+  max-width: 52rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The flow dots are the one purely decorative motion in the diagram. Park
+     them at the start of their path rather than hiding them, so it still reads
+     as directional. */
+  .sysgraph__flow {
+    animation: none;
+    offset-distance: 0%;
+  }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
  * CUSTOM CURSOR
  *
  * The element is always in the DOM; JS only sets data-attributes, exactly the
@@ -2012,11 +2253,30 @@ font {
 .cursor-dot[data-visible] {
   opacity: 1;
 }
+/**
+ * White on the dark canvas.
+ *
+ * Amber is the brand accent and it is the right dot on the light page, where it
+ * is the one warm mark on a near-white sheet. On the night sky it stops being a
+ * pointer and starts being another light source — it sits in a frame that
+ * already has a moon, an amber hero glow and amber accents in the chrome, and
+ * a small amber disc following the mouse through that reads as part of the
+ * scene rather than as the cursor. White has nothing else competing with it in
+ * the dark palette, so it stays unambiguously the pointer.
+ *
+ * The label stays near-black either way, so both dot colours keep it legible.
+ */
+.dark .cursor-dot {
+  background: #ffffff;
+}
 /* Expanded pill carrying a word — "View", "Open", "Explore". */
 .cursor-dot[data-labelled] {
   width: 4.75rem;
   height: 4.75rem;
   background: color-mix(in srgb, var(--accent) 92%, transparent);
+}
+.dark .cursor-dot[data-labelled] {
+  background: rgb(255 255 255 / 0.94);
 }
 .cursor-dot[data-down] {
   scale: 0.86;
@@ -2027,8 +2287,9 @@ font {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  /* Always near-black: the dot is amber in both themes, so the label must not
-     flip with the theme or it loses contrast in one of them. */
+  /* Always near-black. The dot is amber on the light theme and white on the
+     dark one, and near-black is the legible label on both — so it must not
+     flip with the theme, or it disappears into one of them. */
   color: #0f1620;
   opacity: 0;
   transition: opacity 0.2s var(--ease-out-quint);

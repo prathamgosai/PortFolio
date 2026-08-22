@@ -348,19 +348,288 @@ export const SKY_FRAG = /* glsl */ `
      *   · only away from the sun (its scatter washes them out),
      *   · only on the dark theme (uStars).
      */
+    /**
+     * ── Point sources have to carry their own alpha ──
+     *
+     * The whole sky renders at 0.42 on the editorial routes so that body copy
+     * wins, and over a near-black page that ceiling costs a white pixel more
+     * than half its luminance. For cloud that is exactly right. For the
+     * brightest, smallest things in the frame it is fatal: a meteor came out at
+     * around 40% grey and a first-magnitude star was a smudge, and no amount of
+     * work on either shape gets past a multiply applied after it.
+     *
+     * The sun already had this fixed locally (see uSunStory / sunLocal at the
+     * bottom). This is the same fix generalised: anything that should read as a
+     * light source writes its strength here, and the alpha comes up in exactly
+     * those pixels and nowhere else. The reading column is untouched, because
+     * a star is a handful of pixels wide.
+     */
+    float sparkle = 0.0;
+
     if (uStars > 0.001) {
-      vec2 sgrid = vec2(uv.x * uAspect, uv.y) * 42.0 + uParallax * 6.0;
-      vec2 sid = floor(sgrid);
-      vec2 sf = fract(sgrid);
-      float pick = h21(sid);
-      if (pick > 0.975) {
-        vec2 jitter = vec2(h21(sid + 3.1), h21(sid + 7.7));
-        float sd = length(sf - jitter);
-        // Twinkle: each star on its own slow phase.
-        float tw = 0.55 + 0.45 * sin(uTime * 1.4 + pick * 90.0);
-        float star = smoothstep(0.13, 0.0, sd) * tw;
-        float highSky = smoothstep(horizon - 0.05, 1.0, uv.y);
-        col += vec3(1.0, 0.96, 0.9) * star * highSky * uStars * 0.9;
+      /**
+       * How far down the frame the field reaches. The ramp used to run all the
+       * way to uv.y = 1, which meant stars only got anywhere near full strength
+       * in the top few percent of the sky and everything below was a whisper —
+       * the field looked sparse because most of it was being faded out, not
+       * because there were too few stars in it. Topping out just above the
+       * horizon deck instead fills the sky properly, and the deck itself is
+       * still what hides them at the bottom.
+       *
+       * It can run this close to the horizon safely because every cloud layer
+       * is drawn AFTER this block and paints straight over it. The stars do not
+       * need to be masked away from the deck by hand; the deck occludes them,
+       * which is both cheaper and more correct than a hand-tuned fade.
+       */
+      float highSky = smoothstep(horizon - 0.04, horizon + 0.12, uv.y);
+      if (highSky > 0.002) {
+        vec2 sp = vec2(uv.x * uAspect, uv.y);
+
+        /**
+         * TWO FIELDS, not one. A single grid gives every star the same size and
+         * the same brightness, and a sky where every star is identical reads as
+         * noise or as dust on the lens — the eye needs a magnitude spread
+         * before it accepts a field as stars.
+         *
+         * Field one is the dust: dense, small, faint, no structure. It is what
+         * fills the sky between the things you actually look at.
+         */
+        vec2 g1 = sp * 110.0 + uParallax * 14.0;
+        vec2 i1 = floor(g1);
+        float p1 = h21(i1);
+        if (p1 > 0.80) {
+          vec2 d1 = fract(g1) - vec2(h21(i1 + 3.1), h21(i1 + 7.7));
+          float tw = 0.45 + 0.55 * sin(uTime * 2.1 + p1 * 140.0);
+          // Squared, so the point falls off fast and stays a point rather than
+          // growing the soft blob a linear smoothstep gives at this density.
+          float s = smoothstep(0.11, 0.0, length(d1));
+          col += vec3(0.84, 0.89, 1.0) * s * s * tw * highSky * uStars * 0.7;
+        }
+
+        /**
+         * Field two is the bright stars: sparse, on a much coarser grid so they
+         * never crowd, and each with a core, a small halo and four diffraction
+         * spikes. The spikes are the whole point — they are what an eye (and a
+         * lens) actually does with a bright point source, and they are the cue
+         * that separates a star from a lit pixel.
+         *
+         * Magnitude is hashed per star rather than shared, because a row of
+         * equally bright spiked stars looks like a UI, not a sky.
+         */
+        vec2 g2 = sp * 30.0 + uParallax * 5.0;
+        vec2 i2 = floor(g2);
+        float p2 = h21(i2 + 19.3);
+        if (p2 > 0.885) {
+          vec2 dv = fract(g2) - vec2(h21(i2 + 4.7), h21(i2 + 12.9));
+          float d = length(dv);
+          float mag = 0.45 + 0.55 * h21(i2 + 31.1);
+          float tw = 0.60 + 0.40 * sin(uTime * 1.15 + p2 * 90.0);
+
+          float core = smoothstep(0.060, 0.0, d);
+          float halo = pow(max(1.0 - d / 0.36, 0.0), 3.0) * 0.40;
+          /**
+           * Spikes as a product of two falloffs: tight across the spike, wide
+           * along it. Cross the two axes and you get the four-arm star shape
+           * for a handful of instructions and no texture.
+           */
+          float spike = pow(max(1.0 - abs(dv.y) / 0.022, 0.0), 1.5)
+                      * pow(max(1.0 - abs(dv.x) / 0.34, 0.0), 2.5)
+                      + pow(max(1.0 - abs(dv.x) / 0.022, 0.0), 1.5)
+                      * pow(max(1.0 - abs(dv.y) / 0.34, 0.0), 2.5);
+
+          // Real star fields are not white. Splitting the tint blue/warm on a
+          // hash is the cheapest possible stand-in for stellar temperature.
+          vec3 tint = mix(vec3(0.74, 0.84, 1.0), vec3(1.0, 0.92, 0.80),
+                          h21(i2 + 55.5));
+          col += tint * (core + halo + spike * 0.55) * tw * mag
+               * highSky * uStars * 1.7;
+          // The core and the spikes, not the halo — the halo is meant to be
+          // soft, and lifting its alpha would put a visible disc of raised
+          // opacity around every bright star.
+          sparkle = max(sparkle, (core + spike * 0.45) * tw * mag * highSky);
+        }
+
+        /**
+         * ── Shooting stars ──
+         *
+         * Five of them, each on its own cycle, and the cycles are deliberately
+         * not multiples of each other: 7.0, 9.6, 12.2, 14.8 and 17.4 seconds.
+         * Coprime-ish periods are the whole reason the sky never falls into a
+         * rhythm — with a shared period all five would fire together, and a
+         * volley of meteors reads as a screensaver.
+         *
+         * Each is visible for well under a second out of its cycle, so at any
+         * instant there is usually none or one. That sparseness is the point.
+         * A meteor is worth drawing because it is rare; make them frequent and
+         * they stop being an event and become weather.
+         */
+        /**
+         * Meteors do NOT use highSky. That mask exists to keep the star field
+         * out of the bright air just above the deck, and it is fully faded by
+         * about a tenth of a frame above the horizon — which is most of where a
+         * falling streak actually is. Reusing it erased them almost completely:
+         * they were being drawn correctly and then multiplied away, which is
+         * why nothing appeared however bright they were made.
+         *
+         * This mask is the horizon and nothing else. The cloud layers are drawn
+         * after this block and occlude whatever they cover, which is the right
+         * answer anyway — a meteor behind cloud is behind cloud.
+         */
+        float meteorSky = smoothstep(horizon - 0.02, horizon + 0.06, uv.y);
+
+        for (int m = 0; m < 5; m++) {
+          float fm = float(m);
+          float period = 7.0 + fm * 2.6;
+          const float dur = 1.05;
+
+          // Offset each meteor's clock by its own hash, or all five would start
+          // their first pass at t = 0 together.
+          float cyc = (uTime + h21(vec2(fm, 11.0)) * period) / period;
+          float k = floor(cyc);
+          float u = fract(cyc) * period;
+
+          if (u < dur) {
+            /**
+             * Every occurrence is rerolled on k, so a meteor never repeats the
+             * same track twice — hashing on the index alone would give five
+             * fixed streaks blinking on and off in the same five places.
+             */
+            float s1 = h21(vec2(fm * 3.1, k));
+            float s2 = h21(vec2(fm * 3.1 + 17.0, k + 3.0));
+            float s3 = h21(vec2(fm * 3.1 + 41.0, k + 7.0));
+
+            float prog = u / dur;
+
+            // Entering high and falling. Never upward: a meteor that climbs
+            // reads instantly as a firework. Entry is kept in the top quarter
+            // of the frame so the whole track has somewhere to fall through.
+            vec2 p0 = vec2(mix(-0.10, uAspect + 0.10, s1), mix(0.86, 1.12, s2));
+            float ang = mix(-2.30, -0.84, s3);
+            vec2 dv = vec2(cos(ang), sin(ang));
+            vec2 head = p0 + dv * (0.42 + 0.40 * s2) * prog;
+
+            vec2 d = sp - head;
+            // Cheap rejection. This loop runs for every pixel in the upper sky
+            // and a meteor covers almost none of them, so the squared-distance
+            // test is what keeps the whole feature close to free.
+            if (dot(d, d) < 0.12) {
+              /**
+               * ── The track frame ──
+               *
+               * fa is the distance ALONG the track measured backwards from the
+               * head, so it is positive behind and negative in front. perpLine is
+               * the distance from the infinite line through the head, which is
+               * what the head flare needs; perpSeg clamps to the trail
+               * segment, which is what the trail needs. Keeping the two apart
+               * matters — using the clamped one for the flare wraps the glow
+               * around the tail end as well as the head.
+               */
+              float fa = dot(d, -dv);
+              float perpLine = length(d + dv * fa);
+
+              /**
+               * ── The trail GROWS ──
+               *
+               * The single worst thing about the first version, and the one
+               * that no amount of shaping would have fixed: the trail was a
+               * fixed length, so a fully-formed streak sprang into existence at
+               * prog = 0 with a head already attached to 150px of tail. A
+               * meteor's train is drawn BEHIND it as it goes — for the first
+               * fraction of a second there is barely any, and it extends as the
+               * thing travels. That is most of what says "moving object" rather
+               * than "line that was switched on".
+               */
+              float tl = (0.10 + 0.13 * s1) * smoothstep(0.0, 0.26, prog);
+              float along = clamp(fa, 0.0, tl);
+              float perpSeg = length(d + dv * along);
+              float u01 = along / max(tl, 0.0001);
+
+              /**
+               * ── Ablation flicker ──
+               *
+               * A meteor is a grain of rock coming apart, not a lamp. It
+               * brightens and stutters as it sheds material, and two sines at
+               * unrelated rates give that without it reading as a strobe. The
+               * floor is high enough that it never actually blinks out.
+               */
+              float flick = 0.78 + 0.22 * sin(prog * 47.0 + s1 * 30.0)
+                                      * sin(prog * 19.0 + s3 * 12.0);
+
+              /**
+               * ── The head is a teardrop, not a ball ──
+               *
+               * It used to be pow(1 - length(d)/0.030, 2.5) — a symmetric
+               * round glow 27px across stuck on the end of a 3px line, which is
+               * a lollipop or a tadpole and reads as a bug the moment you look
+               * at it. The luminous part of a real meteor is ELONGATED along
+               * the track: it extends well behind the leading point, barely
+               * ahead of it, and hardly at all across. Scaling the two axes
+               * separately, and asymmetrically fore and aft, is the whole
+               * difference.
+               */
+              float fore = fa > 0.0 ? 0.052 : 0.013;
+              float flare = pow(max(1.0 - length(vec2(fa / fore,
+                                                      perpLine / 0.0085)), 0.0), 2.0);
+
+              /**
+               * ── The trail is a core inside a halo ──
+               *
+               * One hard-edged line is a laser. Real trains have a bright
+               * filament with a soft sheath of excited air around it, and the
+               * sheath is most of the visible width. The core is widest just
+               * behind the head — where the material is still burning — and
+               * pinches to nothing at the tail.
+               */
+              float w = mix(0.0042, 0.0006, pow(u01, 0.55));
+              float core = smoothstep(w, 0.0, perpSeg);
+              float halo = exp(-perpSeg / max(w * 4.2, 0.0004));
+
+              // Longitudinal falloff. Exponential, not linear: a train is
+              // brightest right at the head and has a long faint remainder,
+              // and a straight ramp gives it a visible far end instead.
+              float lon = exp(-u01 * 3.0);
+
+              /**
+               * The persistent train — the faint wide smudge that hangs in the
+               * air after the bright part has moved on. Much broader, much
+               * dimmer, and decaying far more slowly along the track.
+               */
+              float train = exp(-u01 * 1.3) * exp(-perpSeg / 0.011) * 0.22;
+
+              /**
+               * ── Two envelopes, not one ──
+               *
+               * The head goes out before the train does. A meteor stops burning
+               * and the glow it left behind lingers for a moment after — fading
+               * both together is the thing that makes a streak look like it was
+               * switched off rather than like it burned up.
+               */
+              float headVis = smoothstep(0.0, 0.05, prog)
+                            * (1.0 - smoothstep(0.60, 0.90, prog));
+              float trailVis = smoothstep(0.0, 0.08, prog)
+                             * (1.0 - smoothstep(0.68, 1.0, prog));
+
+              /**
+               * Colour along the track. The head burns hot and near-white; the
+               * train behind it is cooler ionised air and goes blue as it
+               * decays. A single colour for the whole streak is flat, and the
+               * shift is what carries the sense that the far end is older.
+               */
+              vec3 tint = mix(vec3(1.0, 0.98, 0.94), vec3(0.60, 0.76, 1.0),
+                              smoothstep(0.0, 0.55, u01));
+
+              float bright = uStars * meteorSky * flick;
+
+              col += vec3(1.0, 0.98, 0.93) * flare * 1.15 * headVis * bright;
+              col += tint * (core * 1.25 + halo * 0.42) * lon * trailVis * bright;
+              col += vec3(0.66, 0.80, 1.0) * train * trailVis * bright;
+
+              sparkle = max(sparkle,
+                            (flare * headVis + (core + halo * 0.4) * lon * trailVis)
+                            * meteorSky);
+            }
+          }
+        }
       }
     }
 
@@ -388,8 +657,16 @@ export const SKY_FRAG = /* glsl */ `
      * bug rather than as the moon, so the radii and strengths below are all
      * interpolated on uMoon rather than shared.
      */
-    float bloomR   = mix(0.34, 0.17, uMoon);
-    float scatterR = mix(0.62, 0.34, uMoon);
+    /**
+     * The moon's radii stay tighter than the sun's — its light does stop close
+     * to the disc, which is why stars survive beside it — but the first pass at
+     * this pulled them in so far the disc had no air around it at all and read
+     * as a decal on the sky. A full moon does throw a visible corona a couple
+     * of diameters wide onto the haze; it is only the wide half-sky scatter it
+     * does not have.
+     */
+    float bloomR   = mix(0.34, 0.26, uMoon);
+    float scatterR = mix(0.62, 0.44, uMoon);
 
     float disc  = smoothstep(0.068, 0.022, sunDist);
     float bloom = pow(max(1.0 - sunDist / bloomR, 0.0), 2.6);
@@ -399,7 +676,7 @@ export const SKY_FRAG = /* glsl */ `
      * it was grading the entire frame warm. A sun should brighten the air
      * around itself and leave the rest of the sky its own colour.
      */
-    float scatter = pow(max(1.0 - sunDist / scatterR, 0.0), 2.4) * mix(0.42, 0.22, uMoon);
+    float scatter = pow(max(1.0 - sunDist / scatterR, 0.0), 2.4) * mix(0.42, 0.30, uMoon);
 
     /**
      * uSunStory is the scroll narrative: 1 at the hero, dipping to ~0.55 through
@@ -420,8 +697,8 @@ export const SKY_FRAG = /* glsl */ `
      * rather than as a sun. Mixing carries the hue at any background
      * brightness; the smaller additive term is what still makes it glow.
      */
-    col = mix(col, uSun, clamp(bloom * mix(0.75, 0.45, uMoon) * uSunStory, 0.0, 1.0));
-    col += uSun * bloom * mix(0.45, 0.30, uMoon) * uSunStory;
+    col = mix(col, uSun, clamp(bloom * mix(0.75, 0.52, uMoon) * uSunStory, 0.0, 1.0));
+    col += uSun * bloom * mix(0.45, 0.38, uMoon) * uSunStory;
     /**
      * ── Volumetric rays ──
      *
@@ -463,10 +740,22 @@ export const SKY_FRAG = /* glsl */ `
      */
     float rayGate = smoothstep(0.055, 0.17, sunDist);
 
-    // Shafts are a sun thing. The moon keeps a trace so the air around it is
-    // not dead, but god-rays off a full moon read as a mistake.
-    col += uSun * (shaft * 0.30 + spokes * 0.20) * rayFall * rayGate
-         * mix(1.0, 0.06, uMoon) * uSunStory;
+    /**
+     * The two ray terms are weighted DIFFERENTLY per body, not scaled together.
+     *
+     * The broad shafts are moonlight through haze — that is a real thing you
+     * can stand outside and see, and suppressing it to a trace was what left
+     * the night moon sitting in dead air. The fine spokes are lens/eye glare
+     * off something far brighter than its surroundings by orders of magnitude;
+     * a full moon does not produce them, and drawn at sun strength they are the
+     * single fastest way to make the moon read as a bug.
+     *
+     * So: keep most of the shaft on the moon, keep almost none of the spoke.
+     */
+    float shaftK = mix(0.30, 0.22, uMoon);
+    float spokeK = mix(0.20, 0.04, uMoon);
+    col += uSun * (shaft * shaftK + spokes * spokeK) * rayFall * rayGate
+         * uSunStory;
 
     if (uMoon < 0.5) {
       /* ── SUN ────────────────────────────────────────────────────────── */
@@ -511,33 +800,154 @@ export const SKY_FRAG = /* glsl */ `
       vec2 mu = sunDelta / 0.068;
       float r = length(mu);
 
-      /**
-       * The maria — the dark basalt plains that make up the face.
-       *
-       * This is the single cue that separates "the moon" from "a white circle".
-       * A full moon rendered as a flat disc reads as a UI dot or a rendering
-       * fault, because nothing else in the sky is a perfect featureless circle;
-       * the blotches are what the eye actually recognises. Sampled in disc
-       * space so they stay locked to the face rather than swimming as the sky
-       * drifts underneath.
-       */
-      float maria = fbm2(mu * 1.7 + vec2(9.3, 2.7), oLow);
-      float face = 1.0 - 0.30 * smoothstep(0.40, 0.66, maria);
-
-      // A little darkening toward the limb. The moon has very little of this
-      // compared to a star — it is rough rock, not a glowing sphere — so it is
-      // deliberately slight. Overdo it and it turns into a shaded ball.
-      face *= 1.0 - 0.16 * smoothstep(0.55, 1.0, r);
-
-      /**
-       * A hard edge, unlike the sun's. The moon is a solid body occluding the
-       * sky behind it, and that crisp limb is most of why it reads as an object
-       * at a distance rather than as a glow in the air. The ramp is about two
-       * pixels wide at a normal viewport height — enough to antialias, not
-       * enough to look soft.
-       */
       float limb = smoothstep(1.0, 0.965, r);
-      col = mix(col, uSun * face, limb * uSunStory);
+
+      /**
+       * Everything inside this gate is surface detail, and it is worth noting
+       * that the branch it sits in runs for EVERY pixel on the dark theme, not
+       * just the ones on the disc — the moon covers well under a percent of the
+       * frame. Skipping the whole face when the pixel is off it is most of the
+       * cost of this block, and it is what pays for the second crater pass.
+       */
+      if (limb > 0.001) {
+        /**
+         * ── The disc is a sphere, and the texture has to know that ──
+         *
+         * Sampling the noise in flat disc coordinates paints the face on like a
+         * decal: features keep their full size right up to the edge, which is
+         * exactly what a circle does and exactly what a ball does not. On a
+         * sphere seen from far away the surface turns away from you near the
+         * limb, so the same amount of ground occupies less and less screen.
+         *
+         * asin(r)/r is that projection, in one cheap line: 1 at the centre,
+         * rising to pi/2 at the limb, so texture space stretches as screen space
+         * runs out. Normalising by 2/pi keeps the edge at 1. This single change
+         * did more for the moon reading as an object than any amount of extra
+         * crater detail did.
+         */
+        float rs = clamp(r, 0.0, 0.999);
+        vec2 sph = mu * (asin(rs) / max(rs, 0.001)) * 0.63662;
+
+        /**
+         * ── The face, in three scales ──
+         *
+         * One noise field at one frequency gives an evenly mottled disc, and an
+         * evenly mottled disc is camouflage, not a moon. The real face has a
+         * clear hierarchy: a few CONTINENT-sized dark seas, mid-scale basins
+         * inside them, and a fine highland grain over everything. Reading it as
+         * "the moon" depends on the largest scale being much larger than the
+         * others — that is the silhouette the eye has memorised.
+         */
+        // Seas. Low frequency and a hard-ish threshold, so they are shapes with
+        // coastlines rather than a smooth ramp.
+        float seas = fbm2(sph * 0.85 + vec2(2.2, 5.8), oSoft);
+        float face = 1.0 - 0.30 * smoothstep(0.44, 0.72, seas);
+
+        // Basins within them, at roughly double the scale.
+        float maria = fbm2(sph * 1.7 + vec2(9.3, 2.7), oLow);
+        face *= 1.0 - 0.20 * smoothstep(0.40, 0.66, maria);
+
+        // Highland grain. Multiplicative and centred on 1, so it textures the
+        // rock without moving the disc's overall brightness.
+        float grain = fbm2(sph * 7.0 + vec2(3.7, 8.1), oLow);
+        face *= 0.93 + 0.14 * grain;
+
+        /**
+         * ── Craters ──
+         *
+         * Two passes at unrelated scales, and the reason is a failure worth
+         * recording: a single dense pass put craters on a visible LATTICE. Each
+         * one sits in its own hash cell, so at one frequency and a low threshold
+         * — half the cells occupied — the eye picks the grid straight out, and a
+         * moon with a regular pattern of dots on it looks worse than a plain
+         * one. Two frequencies, both sparse, break it: neither grid is dense
+         * enough to read on its own, and they do not line up with each other.
+         *
+         * The jitter is bounded rather than free for a related reason. A crater
+         * is drawn from its own cell only, so one that wandered far enough to
+         * cross a cell edge got sliced off in a straight line. Keeping
+         * offset + radius under half a cell is what stops that, and it is why
+         * the radii do not go any wider than they do.
+         */
+        float craters = 0.0;
+        for (int ci = 0; ci < 2; ci++) {
+          float scl = ci == 0 ? 2.5 : 5.1;
+          float thr = ci == 0 ? 0.60 : 0.72;
+          float amp = ci == 0 ? 1.0 : 0.6;
+          float so  = ci == 0 ? 0.0 : 61.7;
+
+          vec2 cg = sph * scl + so;
+          vec2 cid = floor(cg);
+          if (h21(cid + 41.0 + so) > thr) {
+            vec2 cj = (vec2(h21(cid + 5.5 + so), h21(cid + 17.2 + so)) - 0.5) * 0.52;
+            vec2 cd = fract(cg) - 0.5 - cj;
+            float crad = 0.08 + 0.16 * h21(cid + 23.0 + so);
+            float cl = length(cd);
+
+            float bowl = smoothstep(crad, crad * 0.55, cl);
+            // A band, as the product of an ascending and a descending ramp,
+            // rather than one smoothstep with reversed edges — reversed edges
+            // are undefined in the ES spec even though they happen to work.
+            float rim = smoothstep(crad * 0.72, crad * 0.98, cl)
+                      * (1.0 - smoothstep(crad, crad * 1.20, cl));
+            // Lit from up-left, matching where the moon sits in frame. The
+            // bright wall on one side and the shadowed one on the other is what
+            // makes these read as holes rather than as more blotches.
+            float lit = dot(normalize(cd + vec2(0.0001)),
+                            normalize(vec2(-0.75, 0.66)));
+            craters += amp * (bowl * (lit * 0.13 - 0.09) + rim * 0.07);
+          }
+        }
+        /**
+         * Faded out toward the limb, which is both a fix and a fact: it hides
+         * the straight edge where a crater meets the rim, and it is what a
+         * sphere does anyway — near the limb you are looking along the ground,
+         * so relief flattens into nothing.
+         */
+        face += craters * smoothstep(1.0, 0.78, r);
+
+        /**
+         * A ray system — the pale streaks thrown radially out of one young
+         * crater. Only one, deliberately: the moon has exactly one that
+         * dominates at this size, and a disc covered in them looks cracked.
+         *
+         * Gated to START away from its own centre. Drawn all the way in, every
+         * streak converged on a single point and the result read as a scratch
+         * on the lens rather than as ejecta; real rays are lost in the crater's
+         * own ejecta blanket for a good radius before they emerge.
+         */
+        vec2 rc = sph - vec2(-0.22, -0.46);
+        float rl = length(rc);
+        float rayNoise = n2(vec2(atan(rc.y, rc.x) * 5.5, 3.1));
+        float rays = smoothstep(0.60, 0.98, rayNoise)
+                   * smoothstep(0.12, 0.34, rl)
+                   * (1.0 - smoothstep(0.30, 0.95, rl));
+        face += rays * 0.05 * smoothstep(1.0, 0.80, r);
+
+        // A little darkening toward the limb. The moon has very little of this
+        // compared to a star — it is rough rock, not a glowing sphere — so it
+        // is deliberately slight. Overdo it and it turns into a shaded ball.
+        face *= 1.0 - 0.20 * smoothstep(0.50, 1.0, r);
+
+        /**
+         * Slightly over uSun, not at it. The disc is the brightest object in a
+         * night sky by a wide margin, and matching it exactly to the token that
+         * also tints the halo left the two indistinguishable — the moon had no
+         * edge against its own glow.
+         */
+        col = mix(col, uSun * face * 1.08, limb * uSunStory);
+      }
+
+      /**
+       * The corona: a tight ring of lit haze hugging the limb, gated to start
+       * OUTSIDE it so it never washes the face. This is separate from the bloom
+       * above — bloom is the wide glow, this is the hard little collar of light
+       * that only a body with a sharp edge produces, and it is what sells the
+       * disc as something the air is scattering around.
+       */
+      float corona = pow(max(1.0 - sunDist / 0.155, 0.0), 2.4)
+                   * smoothstep(0.066, 0.082, sunDist);
+      col += uSun * corona * 0.55 * uSunStory;
     }
 
     /**
@@ -596,8 +1006,17 @@ export const SKY_FRAG = /* glsl */ `
      * sky its own colour — which is also what keeps the night looking like
      * night.
      */
-    float forward = pow(max(1.0 - sunDist / mix(0.85, 0.45, uMoon), 0.0), 2.6);
-    float lightK = mix(1.0, 0.45, uMoon);
+    float forward = pow(max(1.0 - sunDist / mix(0.85, 0.60, uMoon), 0.0), 2.6);
+    /**
+     * Raised from 0.45. The correction above was right in direction and
+     * overshot: at 0.45 the moon lit nothing but itself, so the cloud near it
+     * stayed the same flat grey as the cloud on the far side of the frame and
+     * the disc read as a sticker pasted over an unrelated sky. Moonlight is
+     * weak in absolute terms, but the eye adapts — what it judges is the
+     * CONTRAST between cloud near the moon and cloud away from it, and that
+     * contrast is large on a clear night.
+     */
+    float lightK = mix(1.0, 0.72, uMoon);
 
     /* ── Cirrus ───────────────────────────────────────────────────────── */
     if (above > 0.002) {
@@ -729,7 +1148,7 @@ export const SKY_FRAG = /* glsl */ `
 
         // Clouds near the sun take its colour, and take it on their lit faces
         // only — multiplying by lit is the whole point.
-        float sw = pow(max(1.0 - sunDist / mix(0.60, 0.32, uMoon), 0.0), 2.2);
+        float sw = pow(max(1.0 - sunDist / mix(0.60, 0.44, uMoon), 0.0), 2.2);
         tc = mix(tc, uSun, sw * lit * 0.40 * lightK * uSunStory);
 
         // Silver lining. Peaks where td is LOW — the thin ragged edge of the
@@ -1029,7 +1448,7 @@ export const SKY_FRAG = /* glsl */ `
        * something else, which is the single most common tell that a procedural
        * sky was assembled from separate parts.
        */
-      float sunWash = pow(max(1.0 - sunDist / mix(0.55, 0.30, uMoon), 0.0), 2.2);
+      float sunWash = pow(max(1.0 - sunDist / mix(0.55, 0.42, uMoon), 0.0), 2.2);
       cloud = mix(cloud, uSun, sunWash * lit * 0.45 * lightK * uSunStory);
 
       // Silver lining again, on the deck's thin edges where it frays into gaps.
@@ -1088,6 +1507,51 @@ export const SKY_FRAG = /* glsl */ `
      * deck and the cumulus, because that is where the air is — in front of all
      * of it. Also does useful work hiding the seam where the two layers meet.
      */
+    /**
+     * ── Moonbeams, in FRONT of the cloud ──
+     *
+     * The shaft term far above is drawn before any cloud layer, so the deck and
+     * the cumulus paint straight over it — which is backwards. A crepuscular ray
+     * is not light on the sky behind a cloud; it is a lit column of air BETWEEN
+     * the cloud and the eye, and the whole reason it is visible is that it
+     * crosses in front of something darker. Drawn behind, it vanishes exactly
+     * where it should be strongest.
+     *
+     * So this is a second, softer pass at the very end, over everything. It
+     * reuses the same angular noise as the first — the rays have to be the same
+     * rays — but on its own falloff, and it is gated to the moon: the sun's
+     * shafts already read correctly against a bright sky, and doubling them
+     * there tips straight into cartoon beams.
+     *
+     * Additive and weak by design. The test is that it should be obvious the
+     * air near the moon is brighter, and not obvious that anything was drawn.
+     */
+    if (uMoon > 0.5) {
+      float beamAng = atan(sunDelta.y, sunDelta.x);
+      // Lower frequencies than the glare pass: columns of air are wide.
+      float beam = n2(vec2(beamAng * 2.6, uTime * 0.030)) * 0.62
+                 + n2(vec2(beamAng * 6.3, uTime * 0.019 + 4.0)) * 0.38;
+      beam = smoothstep(0.42, 0.95, beam);
+
+      /**
+       * Reaches much further than the disc's glow does — this is the one moon
+       * term that is allowed to cross a third of the frame, because a shaft is
+       * a long thin thing by definition and cutting it short reads as a smudge
+       * around the moon rather than as light coming from it.
+       */
+      float beamFall = pow(max(1.0 - sunDist / 1.05, 0.0), 2.2);
+
+      // Starts clear of the limb, so no beam is ever drawn across the face.
+      float beamGate = smoothstep(0.075, 0.30, sunDist);
+
+      // Fades into the deck rather than ending on it: the lower air is thicker
+      // and the shafts are lost in it well before the horizon.
+      float beamHeight = smoothstep(horizon - 0.06, horizon + 0.28, uv.y);
+
+      col += uSun * beam * beamFall * beamGate
+           * (0.20 + 0.30 * beamHeight) * uSunStory;
+    }
+
     float hazeBand = exp(-abs(uv.y - horizon) * 22.0);
     col = mix(col, mix(uHorizon, uLight, 0.40), hazeBand * 0.22);
 
@@ -1132,7 +1596,14 @@ export const SKY_FRAG = /* glsl */ `
      */
     float sunLocal = smoothstep(0.40, 0.02, sunDist) * uSunStory;
 
-    float boost = max(max(headerBand, footerBand), sunLocal * 0.85);
+    /**
+     * sparkle joins the same max() rather than adding to it. These are all
+     * answers to the same question — how opaque does the sky need to be HERE —
+     * and summing them would let a star sitting inside the header band drive
+     * the alpha past the cap for reasons that have nothing to do with either.
+     */
+    float boost = max(max(headerBand, footerBand),
+                      max(sunLocal * 0.85, clamp(sparkle, 0.0, 1.0)));
     // Capped below 1: even at full strength the sky stays a backdrop that the
     // page background still tints, rather than becoming an opaque panel.
     float alpha = clamp(uOpacity * (1.0 + 1.2 * boost), 0.0, 0.92);

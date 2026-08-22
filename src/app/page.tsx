@@ -6,6 +6,7 @@ import { Hero } from "@/components/hero";
 import { Faq } from "@/components/faq";
 import { Testimonials } from "@/components/testimonials";
 import { SystemBento } from "@/components/system-bento";
+import { SystemGraph } from "@/components/lab/system-graph";
 import { AboutTeaser } from "@/components/about-teaser";
 import { Journey } from "@/components/journey";
 import { SelectedWork } from "@/components/selected-work";
@@ -16,6 +17,12 @@ import { PersonJsonLd } from "@/components/person-jsonld";
 import { FaqJsonLd } from "@/components/faq-jsonld";
 import { getAllPosts } from "@/lib/posts";
 import { experience } from "@/data/portfolio";
+import {
+  systemNodes,
+  systemEdges,
+  workforceNodes,
+  workforceEdges,
+} from "@/data/lab";
 
 /**
  * ─────────────────────────────────────────────────────────────
@@ -29,9 +36,11 @@ import { experience } from "@/data/portfolio";
  *   SystemBento     the numbers behind it            → "says who?"
  *   AboutTeaser     who is making the claim          → "how did you get here?"
  *   Journey         the dated route                  → "so what have you built?"
- *   SelectedWork    the shipped thing                → "what else can you do?"
+ *   SelectedWork    the shipped thing                → "how is it put together?"
+ *     └ diagram      the WorkforceIQ architecture     → "what else can you do?"
  *   Capabilities    the full scope + how to engage   → "with what?"
- *   TechStack       the tools
+ *   TechStack       the tools                        → "at what altitude?"
+ *     └ diagram      endpoint → network → app → AI
  *   Experience      where the work happened
  *   Writing         evidence of thinking, not just doing
  *   Testimonials    self-hiding until real quotes exist
@@ -62,9 +71,54 @@ export default function HomePage() {
 
       <SelectedWork />
 
+      {/**
+       * The architecture behind the thing SelectedWork just described.
+       *
+       * Both of these diagrams also appear on /lab, and the duplication is the
+       * point rather than an oversight: /lab is where someone goes who already
+       * wants the detail, and most visitors never get there. The claim that the
+       * work is real is much harder to make in prose than by showing the parts
+       * and what talks to what, so the evidence belongs on the page that has to
+       * do the convincing.
+       *
+       * Placed HERE, immediately after the project, because it answers the
+       * question that section raises — not held back to a systems section of
+       * its own, where it would be a diagram in search of a subject.
+       */}
+      <Section
+        label="Architecture"
+        title="How WorkforceIQ is put together."
+        intro="The same platform, as parts and the paths between them. Select any node for what it does."
+      >
+        <SystemGraph
+          nodes={workforceNodes}
+          edges={workforceEdges}
+          caption="The WorkforceIQ architecture — web, API, data, forecasting and delivery."
+          description="The WorkforceIQ architecture. A Next.js web client calls a NestJS API. The API writes to PostgreSQL, pushes background work to Redis, and calls a Python FastAPI forecasting service, which in turn reads history from PostgreSQL. The Redis queue dispatches notifications to WhatsApp via the Meta Graph API and to email as a second channel."
+        />
+      </Section>
+
       <Capabilities />
 
       <TechStack />
+
+      {/**
+       * TechStack names the tools; this says at what ALTITUDE they are used,
+       * which is the part of the claim a list of logos cannot make. It follows
+       * the tools for that reason.
+       */}
+      <Section
+        label="System"
+        title="The whole path, endpoint to automation."
+        intro="Most people work at one altitude. This is the range I actually cover — the cable, the box, the service on it, and the model calling that service."
+      >
+        <SystemGraph
+          nodes={systemNodes}
+          edges={systemEdges}
+          caption="Endpoints through network and security to the application layer, and on to AI-driven automation."
+          description="A system diagram. Endpoints connect to the network, which connects both to security (firewalls and identity) and to the API. The API connects to a PostgreSQL database, a Redis queue, and the Next.js interface, and also to the Claude API. Both the AI layer and the Redis queue feed automation of live operations."
+        />
+      </Section>
 
       {/* Experience preview */}
       <Section label="Experience" title="Where I've done the work.">

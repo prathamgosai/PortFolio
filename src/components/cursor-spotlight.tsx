@@ -26,7 +26,7 @@ export function CursorSpotlight() {
     <div
       className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
       style={{
-        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, var(--glow), transparent 40%)`,
+        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, var(--glow-pointer), transparent 40%)`,
       }}
     />
   );

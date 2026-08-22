@@ -129,9 +129,26 @@ function readTokens() {
      * background for a portfolio. Warmth now comes only from the sun itself,
      * as a local light rather than a global grade.
      */
-    horizon: dark ? "#2f3347" : "#e4ebf1",
-    cloud: dark ? "#222c3d" : "#b9c6d4",
-    light: dark ? "#8794a8" : "#ffffff",
+    horizon: dark ? "#363c54" : "#e4ebf1",
+    /**
+     * ── The dark deck was being crushed twice, not once ──
+     *
+     * #222c3d is a perfectly reasonable night cloud in isolation. On the page
+     * it was not visible, and the reason is that the sky is composited at the
+     * route's 0.42 over a #05070a background: #222c3d lands at about #10161f
+     * and the sky behind it at about #06090f. Nine levels of separation between
+     * cloud and sky, across the whole frame — the forms were there and there
+     * was nothing left to see them by.
+     *
+     * The tokens have to carry that reduction themselves, because the alpha is
+     * a deliberate decision about body copy and is not the thing to trade. Both
+     * are raised together so the light-to-cloud ratio the shader reads as
+     * `palRange` stays near 10 and the shadow lift it derives does not change
+     * character — raising only the cloud would have flattened the deck into one
+     * tone at the same time as making it visible.
+     */
+    cloud: dark ? "#38455d" : "#b9c6d4",
+    light: dark ? "#a4b2c8" : "#ffffff",
     /**
      * The sun is warm in both themes and deliberately NOT the brand accent.
      * A blue sun is absurd; a sun the colour of the UI turns a light source
@@ -291,9 +308,10 @@ export function ImmersiveScene() {
       const flock = buildFlock();
       const birdGeo = new THREE.BufferGeometry();
       birdGeo.setAttribute("position", new THREE.BufferAttribute(flock.position, 3));
-      birdGeo.setAttribute("aSide", new THREE.BufferAttribute(flock.side, 1));
-      birdGeo.setAttribute("aTip", new THREE.BufferAttribute(flock.tip, 1));
-      birdGeo.setAttribute("aPhase", new THREE.BufferAttribute(flock.phase, 1));
+      // vec2: (travel offset along the crossing, wingbeat phase). They are two
+      // unrelated clocks and sharing one attribute for both, as this did, meant
+      // a bird's position in the sky decided where its wings were.
+      birdGeo.setAttribute("aPhase", new THREE.BufferAttribute(flock.phase, 2));
       birdGeo.setAttribute("aSpeed", new THREE.BufferAttribute(flock.speed, 1));
       birdGeo.setAttribute("aScale", new THREE.BufferAttribute(flock.scale, 1));
       birdGeo.setAttribute("aPath", new THREE.BufferAttribute(flock.path, 3));
@@ -308,6 +326,13 @@ export function ImmersiveScene() {
         // night sky, where they read against the lit cloud tops.
         uInk: { value: new THREE.Color(tokens.dark ? "#0a0e16" : "#2b3644") },
         uOpacity: { value: 0 },
+        /**
+         * Drawing-buffer height. The birds' antialias width is derived from how
+         * many pixels each one actually covers, and that cannot be known
+         * without it — a fixed feather looks crisp on the near birds and
+         * dissolves the far ones.
+         */
+        uHeight: { value: renderer.domElement.height },
       };
       const birdMat = new THREE.ShaderMaterial({
         uniforms: birdUniforms,
@@ -440,7 +465,7 @@ export function ImmersiveScene() {
          */
         uniforms.uOpacity.value += (target - uniforms.uOpacity.value) * 0.035;
         // Birds fade in behind the sky so they never arrive before the air does.
-        birdUniforms.uOpacity.value += (target * 0.9 - birdUniforms.uOpacity.value) * 0.03;
+        birdUniforms.uOpacity.value += (target - birdUniforms.uOpacity.value) * 0.03;
         // Dust is the faintest layer in the stack, by a wide margin.
         dustUniforms.uOpacity.value += (target * 0.5 - dustUniforms.uOpacity.value) * 0.03;
 
@@ -492,6 +517,9 @@ export function ImmersiveScene() {
         // miss it and the sun becomes an ellipse and the flock stretches.
         uniforms.uAspect.value = window.innerWidth / Math.max(window.innerHeight, 1);
         dustUniforms.uDpr.value = renderer.getPixelRatio();
+        // Drawing-buffer pixels, not CSS pixels — this feeds an antialias width
+        // and has to follow the device pixel ratio, not the layout.
+        birdUniforms.uHeight.value = renderer.domElement.height;
       }
       function onScroll() {
         const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
