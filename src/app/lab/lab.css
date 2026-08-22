@@ -391,10 +391,17 @@ body:has(.lab-root) > main {
   font-size: clamp(1.25rem, 1rem + 1.1vw, 2rem);
   color: var(--fg);
 }
-.constellation__field:hover .constellation__item {
-  opacity: 0.4;
+/* (hover: hover): on touch the field's emulated hover stuck after a tap,
+   pinning every other item at 40% opacity — sub-AA text — indefinitely. */
+@media (hover: hover) {
+  .constellation__field:hover .constellation__item {
+    opacity: 0.4;
+  }
+  .constellation__field .constellation__item:hover {
+    opacity: 1;
+    color: var(--accent-ink);
+  }
 }
-.constellation__field .constellation__item:hover,
 .constellation__field .constellation__item:focus-visible,
 .constellation__item.is-active {
   opacity: 1;
@@ -734,6 +741,12 @@ body:has(.lab-root) > main {
   .lab-hud__mark-back {
     display: none;
   }
+  /* The HUD Menu pill is the ONLY navigation affordance on /lab mobile —
+     bring it (and the theme toggle) up to the 44px touch bar. */
+  .lab-hud__menu,
+  .lab-hud__theme {
+    padding: 0.75rem 1.1rem;
+  }
 }
 
 /* ── Fullscreen menu ───────────────────────────────────────────────────── */
@@ -751,6 +764,17 @@ body:has(.lab-root) > main {
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   transition: opacity 0.32s var(--ease-out-quint), visibility 0s linear 0.32s;
+}
+
+/* A full-viewport blur(18px) behind a 94% tint is paid for and invisible on
+   phones. Placed AFTER the base rule — inside a media query specificity is
+   unchanged, so source order is what decides. */
+@media (max-width: 47.99rem) {
+  .lab-menu {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, var(--bg) 97%, transparent);
+  }
 }
 .lab-menu[data-open="false"] {
   opacity: 0;

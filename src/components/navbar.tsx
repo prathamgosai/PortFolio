@@ -40,7 +40,7 @@ function ThemeToggle() {
       type="button"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label="Switch between light and dark theme"
-      className="grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-wash hover:text-fg"
+      className="grid h-11 w-11 place-items-center rounded-full text-muted transition-colors hover:bg-wash hover:text-fg md:h-9 md:w-9"
     >
       <Moon className="h-4 w-4 dark:hidden" />
       <Sun className="hidden h-4 w-4 dark:block" />
@@ -236,7 +236,7 @@ export function Navbar() {
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-wash hover:text-fg md:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full text-muted transition-colors hover:bg-wash hover:text-fg md:hidden"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -266,7 +266,7 @@ export function Navbar() {
         aria-label="Mobile"
         data-open={open}
         hidden={!open}
-        className="mobile-sheet pointer-events-auto fixed inset-0 z-30 flex flex-col bg-bg px-6 pb-8 pt-24 md:hidden"
+        className="mobile-sheet pointer-events-auto fixed inset-0 z-30 flex flex-col overflow-y-auto overscroll-contain bg-bg px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-24 md:hidden"
       >
         <ul className="flex flex-col">
           {NAV.map((item, i) => (

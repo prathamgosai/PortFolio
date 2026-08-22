@@ -283,6 +283,13 @@ export function ImmersiveScene() {
          */
         uMoon: { value: tokens.dark ? 1 : 0 },
         uParallax: { value: 0 },
+        /**
+         * Vertical pointer parallax, separate from the horizontal scalar. The
+         * cloudscape used to shift on x only, which reads as a flat painting
+         * sliding sideways; the y component is what turns the same layers into
+         * a space the camera is looking around in.
+         */
+        uParallaxY: { value: 0 },
         uSunStory: { value: 1 },
       };
 
@@ -326,6 +333,10 @@ export function ImmersiveScene() {
         // night sky, where they read against the lit cloud tops.
         uInk: { value: new THREE.Color(tokens.dark ? "#0a0e16" : "#2b3644") },
         uOpacity: { value: 0 },
+        // Pointer parallax for the flock. Scaled per bird by its own depth in
+        // the vertex shader, so near birds slide further than far ones — the
+        // one cue that stops them reading as decals pasted on the sky.
+        uPar: { value: new THREE.Vector2() },
         /**
          * Drawing-buffer height. The birds' antialias width is derived from how
          * many pixels each one actually covers, and that cannot be known
@@ -473,8 +484,29 @@ export function ImmersiveScene() {
          * Layered parallax. Each layer gets a different multiplier off the same
          * eased pointer, which is what produces depth rather than a uniform
          * wobble: stars barely move, the sky moves a little, dust moves most.
+         *
+         * ── The wander term ──
+         *
+         * Two sines at incommensurate low frequencies, added to the pointer
+         * BEFORE the per-layer scaling, so every layer keeps its own multiplier
+         * and the depth grading is preserved. It exists for touch devices:
+         * without a pointer the whole parallax stack idled at zero and the sky
+         * was a still photograph on exactly the machines whose 3-octave path
+         * can least afford to also look static. On desktop it reads as slow
+         * air movement under the pointer's motion. Deliberately bounded to a
+         * fraction of the pointer's range — this is drift, not autopilot.
+         *
+         * It lives here and not in a DOM animation because this path is never
+         * reached under prefers-reduced-motion: those visitors get the static
+         * DigitalField fallback long before this loop starts.
          */
-        uniforms.uParallax.value = pointer.x * 0.06;
+        const wx = pointer.x
+          + Math.sin(elapsed * 0.067) * 0.10 + Math.sin(elapsed * 0.029) * 0.07;
+        const wy = pointer.y
+          + Math.cos(elapsed * 0.047) * 0.07 + Math.sin(elapsed * 0.021) * 0.05;
+        uniforms.uParallax.value = wx * 0.085;
+        uniforms.uParallaxY.value = wy * 0.05;
+        birdUniforms.uPar.value.set(wx, -wy);
 
         /**
          * The sun's arc across the page. `sin(progress * PI)` is 0 at both ends
@@ -483,7 +515,7 @@ export function ImmersiveScene() {
          * the contact section — the horizon they started from.
          */
         uniforms.uSunStory.value = 1 - 0.45 * Math.sin(scrollNorm * Math.PI);
-        dustUniforms.uParallax2.value.set(pointer.x, -pointer.y);
+        dustUniforms.uParallax2.value.set(wx, -wy);
 
         /**
          * Two passes, one context. The sky (and the flock, which shares its
@@ -493,8 +525,17 @@ export function ImmersiveScene() {
          */
         renderer.clear();
         renderer.render(skyScene, skyCamera);
-        renderer.clearDepth();
-        renderer.render(scene, camera);
+        /**
+         * The perspective pass only runs when it has something to draw. The
+         * core object that used to live here is gone, so this scene is empty
+         * on every route today — but the pass survives for whatever returns,
+         * and skipping it saves a clear + full pipeline flush per frame on
+         * exactly the devices that count the cost.
+         */
+        if (scene.children.length > 0) {
+          renderer.clearDepth();
+          renderer.render(scene, camera);
+        }
       }
 
       function start() {
@@ -509,7 +550,7 @@ export function ImmersiveScene() {
         raf = 0;
       }
 
-      function onResize() {
+      function applyResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -520,6 +561,32 @@ export function ImmersiveScene() {
         // Drawing-buffer pixels, not CSS pixels — this feeds an antialias width
         // and has to follow the device pixel ratio, not the layout.
         birdUniforms.uHeight.value = renderer.domElement.height;
+        // The scroll RANGE changed with the viewport, so the normalised scroll
+        // is stale until the next scroll event — which after a rotation may
+        // never come. Re-derive it now or the horizon, the dolly and the
+        // footer band sit at the wrong position.
+        onScroll();
+      }
+      let resizeTimer = 0;
+      let lastResizeW = 0;
+      function onResize() {
+        /**
+         * Height-only resizes are debounced. On mobile the URL bar collapsing
+         * and expanding fires a resize on essentially every scroll gesture,
+         * and each un-debounced call reallocated the entire drawing buffer —
+         * the single most expensive thing this component can do — mid-scroll.
+         * A width change is a real rotation or window drag and applies
+         * immediately; the height settles 200ms after the bar stops moving,
+         * with CSS stretching the canvas to cover the gap in the meantime.
+         */
+        if (window.innerWidth !== lastResizeW) {
+          lastResizeW = window.innerWidth;
+          window.clearTimeout(resizeTimer);
+          applyResize();
+          return;
+        }
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(applyResize, 200);
       }
       function onScroll() {
         const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
@@ -540,7 +607,15 @@ export function ImmersiveScene() {
        */
       function onLost(e: Event) {
         e.preventDefault();
-        stop();
+        /**
+         * Full teardown, not just stop(). This used to stop the loop and flip
+         * to the 2D field but leave the dead canvas in the DOM, every listener
+         * attached, and data-scene="on" still set — which kept the fallback's
+         * companion visuals (the ambient orbs step back under data-scene)
+         * suppressed behind a black rectangle. cleanup() is idempotent, so the
+         * eventual React unmount calling it again is harmless.
+         */
+        cleanup?.();
         setWebgl(false);
       }
 
@@ -555,7 +630,9 @@ export function ImmersiveScene() {
 
       const onReduce = () => {
         if (reduceQuery.matches) {
-          stop();
+          // Same full teardown as context loss — a mid-session reduced-motion
+          // flip must leave no live rAF loop or dead canvas behind.
+          cleanup?.();
           setWebgl(false);
         }
       };
@@ -569,7 +646,15 @@ export function ImmersiveScene() {
       // globals.css.
       document.documentElement.dataset.scene = "on";
 
+      lastResizeW = window.innerWidth;
+
+      let torn = false;
       cleanup = () => {
+        // Idempotent: onLost, onReduce and the unmount cleanup can each call
+        // this without double-disposing.
+        if (torn) return;
+        torn = true;
+        window.clearTimeout(resizeTimer);
         stop();
         delete document.documentElement.dataset.scene;
         window.removeEventListener("resize", onResize);

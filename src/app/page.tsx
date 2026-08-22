@@ -89,13 +89,16 @@ export default function HomePage() {
         label="Architecture"
         title="How WorkforceIQ is put together."
         intro="The same platform, as parts and the paths between them. Select any node for what it does."
+        className="cine-enter cine-exit"
       >
-        <SystemGraph
-          nodes={workforceNodes}
-          edges={workforceEdges}
-          caption="The WorkforceIQ architecture — web, API, data, forecasting and delivery."
-          description="The WorkforceIQ architecture. A Next.js web client calls a NestJS API. The API writes to PostgreSQL, pushes background work to Redis, and calls a Python FastAPI forecasting service, which in turn reads history from PostgreSQL. The Redis queue dispatches notifications to WhatsApp via the Meta Graph API and to email as a second channel."
-        />
+        <Reveal className="reveal--card">
+          <SystemGraph
+            nodes={workforceNodes}
+            edges={workforceEdges}
+            caption="The WorkforceIQ architecture — web, API, data, forecasting and delivery."
+            description="The WorkforceIQ architecture. A Next.js web client calls a NestJS API. The API writes to PostgreSQL, pushes background work to Redis, and calls a Python FastAPI forecasting service, which in turn reads history from PostgreSQL. The Redis queue dispatches notifications to WhatsApp via the Meta Graph API and to email as a second channel."
+          />
+        </Reveal>
       </Section>
 
       <Capabilities />
@@ -111,17 +114,20 @@ export default function HomePage() {
         label="System"
         title="The whole path, endpoint to automation."
         intro="Most people work at one altitude. This is the range I actually cover — the cable, the box, the service on it, and the model calling that service."
+        className="cine-enter cine-exit"
       >
-        <SystemGraph
-          nodes={systemNodes}
-          edges={systemEdges}
-          caption="Endpoints through network and security to the application layer, and on to AI-driven automation."
-          description="A system diagram. Endpoints connect to the network, which connects both to security (firewalls and identity) and to the API. The API connects to a PostgreSQL database, a Redis queue, and the Next.js interface, and also to the Claude API. Both the AI layer and the Redis queue feed automation of live operations."
-        />
+        <Reveal className="reveal--card">
+          <SystemGraph
+            nodes={systemNodes}
+            edges={systemEdges}
+            caption="Endpoints through network and security to the application layer, and on to AI-driven automation."
+            description="A system diagram. Endpoints connect to the network, which connects both to security (firewalls and identity) and to the API. The API connects to a PostgreSQL database, a Redis queue, and the Next.js interface, and also to the Claude API. Both the AI layer and the Redis queue feed automation of live operations."
+          />
+        </Reveal>
       </Section>
 
       {/* Experience preview */}
-      <Section label="Experience" title="Where I've done the work.">
+      <Section label="Experience" title="Where I've done the work." className="cine-enter cine-exit">
         {/* The left rule lives in `.row-hover`, not as a border utility here —
             see the cascade note above `.chip` in globals.css. */}
         <ul className="mt-8 space-y-3">
@@ -144,7 +150,7 @@ export default function HomePage() {
 
       {/* Latest writing */}
       {posts.length > 0 ? (
-        <Section label="Writing" title="Latest posts">
+        <Section label="Writing" title="Latest posts" className="cine-enter cine-exit">
           <ul className="write-list mt-10">
             {posts.map((post, i) => (
               <Reveal key={post.slug} as="li" delay={i * 0.05} className="write-row">
@@ -173,7 +179,7 @@ export default function HomePage() {
       <Testimonials />
 
       {/* FAQ — visible content mirrors the FAQPage structured data */}
-      <Section label="FAQ" title="Questions, answered.">
+      <Section label="FAQ" title="Questions, answered." className="cine-enter cine-exit">
         <Faq />
       </Section>
 

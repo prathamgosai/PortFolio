@@ -31,6 +31,14 @@ const TILT_DEG = 6;
 export function PremiumInteractions() {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    /**
+     * Touch gate. The handler listens on pointerdown as well as pointermove,
+     * so on touch devices every tap wrote --rx/--ry into the card under the
+     * finger and it visibly snapped into a tilt. Tablets were the worst case:
+     * the CSS neutralizer was keyed to width (767px), which an iPad sails
+     * past. Capability, not width, is the correct question.
+     */
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
 
     let card: HTMLElement | null = null;
     let mag: HTMLElement | null = null;
@@ -123,12 +131,14 @@ export function PremiumInteractions() {
       }
     };
 
-    const sync = () => (mq.matches ? detach() : attach());
+    const sync = () => (mq.matches || !fine.matches ? detach() : attach());
     sync();
     mq.addEventListener("change", sync);
+    fine.addEventListener("change", sync);
 
     return () => {
       mq.removeEventListener("change", sync);
+      fine.removeEventListener("change", sync);
       detach();
     };
   }, []);

@@ -162,6 +162,8 @@ export const BIRD_VERT = /* glsl */ `
   uniform float uAspect;
   /** Drawing-buffer height in pixels. Feeds the per-bird antialias width. */
   uniform float uHeight;
+  /** Eased pointer (with the scene's slow wander folded in), for parallax. */
+  uniform vec2 uPar;
   attribute vec2 aPhase;
   attribute float aSpeed;
   attribute float aScale;
@@ -202,7 +204,15 @@ export const BIRD_VERT = /* glsl */ `
      * The flock only ever crosses the frame, so a wrap is indistinguishable
      * from an infinite journey and costs one fract().
      */
-    float t = fract(uTime * spd * 0.030 + travel);
+    /**
+     * Depth drives travel speed. The comment on depth below always claimed
+     * near birds are faster, but the travel clock never actually read it — far
+     * birds crossed the frame at the same rate as near ones, and the flock
+     * gave up its strongest free depth cue. The range is modest: a full-depth
+     * spread of about 1.5x, which reads as distance rather than as slow and
+     * fast birds.
+     */
+    float t = fract(uTime * spd * 0.030 * mix(0.78, 1.18, pathZ) + travel);
     float x = mix(-1.35, 1.35, t) * dir;
 
     /**
@@ -305,6 +315,16 @@ export const BIRD_VERT = /* glsl */ `
      * s * uHeight / 2.
      */
     vec2 pos = vec2(x + o.x * s / uAspect, y + o.y * s * 0.5);
+
+    /**
+     * Pointer parallax, scaled by depth. The flock sits between the dust
+     * (which slides up to ~3.8% of the screen) and the cloud layers (well
+     * under 1%), so its budget lands between them — and is graded so a near
+     * bird slides roughly five times as far as a far one. Without this the
+     * birds were the one layer that ignored the pointer entirely, which
+     * pinned them to the sky like decals the moment everything else moved.
+     */
+    pos += uPar * vec2(0.020, 0.013) * (depth - 0.45);
 
     vHaze = depth;
     // Not every bird is the same shade — plumage varies, and so does how much
@@ -506,7 +526,7 @@ export const DUST_VERT = /* glsl */ `
     float y = fract(position.y + t);
 
     // Nearer motes react more to the pointer. This is the depth cue.
-    vec2 par = uParallax2 * mix(0.004, 0.030, aDepth);
+    vec2 par = uParallax2 * mix(0.004, 0.038, aDepth);
 
     vec2 p = vec2(x + par.x, y + par.y);
     gl_Position = vec4(p.x * 2.0 - 1.0, p.y * 2.0 - 1.0, 0.0, 1.0);

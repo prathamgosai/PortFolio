@@ -138,14 +138,28 @@ export function SystemGraph({
                 top: `${(node.y / VH) * 100}%`,
               }}
             >
+              {/**
+                * The pointer handlers are mouse-only, by pointer type. On
+                * touch a tap fires pointerenter -> pointerleave -> click in
+                * that order, so the enter/leave pair always reset state to
+                * null before click ran its toggle — a tap could select a node
+                * but never DESELECT it. Guarding by type leaves click as the
+                * sole owner of state on touch, and taps genuinely toggle.
+                *
+                * onFocus is guarded to :focus-visible for the same class of
+                * bug: on touch, tap fires focus BEFORE click, so an unguarded
+                * focus handler set the node active and click's toggle
+                * immediately unset it — the first tap read as a no-op.
+                * Keyboard focus still selects.
+                */}
               <button
                 type="button"
                 className={`sysgraph__node${node.primary ? " is-primary" : ""}${
                   active === node.id ? " is-active" : ""
                 }`}
-                onPointerEnter={() => setActive(node.id)}
-                onFocus={() => setActive(node.id)}
-                onPointerLeave={() => setActive((cur) => (cur === node.id ? null : cur))}
+                onPointerEnter={(e) => { if (e.pointerType === "mouse") setActive(node.id); }}
+                onFocus={(e) => { if (e.target.matches(":focus-visible")) setActive(node.id); }}
+                onPointerLeave={(e) => { if (e.pointerType === "mouse") setActive((cur) => (cur === node.id ? null : cur)); }}
                 onBlur={() => setActive((cur) => (cur === node.id ? null : cur))}
                 onClick={() => setActive((cur) => (cur === node.id ? null : node.id))}
                 aria-pressed={active === node.id}

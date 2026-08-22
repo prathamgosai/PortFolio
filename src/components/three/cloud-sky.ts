@@ -264,6 +264,13 @@ export const SKY_FRAG = /* glsl */ `
    */
   uniform float uMoon;
   uniform float uParallax;
+  /**
+   * Vertical parallax, always with a SMALLER per-layer multiplier than the
+   * horizontal term next to it. The eye expects less vertical travel from a
+   * camera look-around than horizontal — matching them reads as the whole
+   * frame swimming.
+   */
+  uniform float uParallaxY;
   uniform float uSunStory;
   varying vec2 vUv;
   ${NOISE2}
@@ -394,7 +401,7 @@ export const SKY_FRAG = /* glsl */ `
          * Field one is the dust: dense, small, faint, no structure. It is what
          * fills the sky between the things you actually look at.
          */
-        vec2 g1 = sp * 110.0 + uParallax * 14.0;
+        vec2 g1 = sp * 110.0 + vec2(uParallax, uParallaxY * 0.6) * 14.0;
         vec2 i1 = floor(g1);
         float p1 = h21(i1);
         if (p1 > 0.80) {
@@ -416,7 +423,7 @@ export const SKY_FRAG = /* glsl */ `
          * Magnitude is hashed per star rather than shared, because a row of
          * equally bright spiked stars looks like a UI, not a sky.
          */
-        vec2 g2 = sp * 30.0 + uParallax * 5.0;
+        vec2 g2 = sp * 30.0 + vec2(uParallax, uParallaxY * 0.6) * 5.0;
         vec2 i2 = floor(g2);
         float p2 = h21(i2 + 19.3);
         if (p2 > 0.885) {
@@ -478,6 +485,14 @@ export const SKY_FRAG = /* glsl */ `
         float meteorSky = smoothstep(horizon - 0.02, horizon + 0.06, uv.y);
 
         for (int m = 0; m < 5; m++) {
+          /**
+           * Phone budget: two meteors, not five. The rest of this feature
+           * (star fields, moon, beams) is per-pixel cost the 3-octave path
+           * pays whether or not anything is visible; the meteor loop is five
+           * head/trail evaluations per upper-sky pixel. Two keeps the sky
+           * alive on touch — the design constraint — at 40% of the cost.
+           */
+          if (!rich && m >= 2) break;
           float fm = float(m);
           float period = 7.0 + fm * 2.6;
           const float dur = 1.05;
@@ -1030,7 +1045,7 @@ export const SKY_FRAG = /* glsl */ `
       // Sheets. Stretched about 1:3 against the y term, which is the prevailing
       // wind doing what wind does to anything thin.
       float c1 = fbm2(vec2(uv.x * uAspect * 1.15 - uTime * 0.005 + uParallax * 0.45,
-                           uv.y * 3.6), oLow);
+                           uv.y * 3.6 + uParallaxY * 1.3), oLow);
       col = mix(col, uLight, smoothstep(0.50, 0.76, c1) * hi * 0.30);
 
       /**
@@ -1040,7 +1055,7 @@ export const SKY_FRAG = /* glsl */ `
        * bend along the coarse sheets, which is what real cirrus does.
        */
       float c2 = fbm2(vec2(uv.x * uAspect * 2.4 + uTime * 0.010 + (c1 - 0.5) * 2.2,
-                           uv.y * 9.0 + (c1 - 0.5) * 1.6), oMid);
+                           uv.y * 9.0 + (c1 - 0.5) * 1.6 + uParallaxY * 2.0), oMid);
       float streak = smoothstep(0.52, 0.78, c2) * hi;
       col = mix(col, uLight, streak * 0.46);
       // Ice catches the sun edge-on. This is the one place in the scene where a
@@ -1050,7 +1065,7 @@ export const SKY_FRAG = /* glsl */ `
       // A third, faster, finer pass. Drifting at double the speed of the
       // sheets, so the two never lock into looking like one moving texture.
       float c3 = fbm2(vec2(uv.x * uAspect * 4.2 + uTime * 0.020 + uParallax * 0.90,
-                           uv.y * 18.0), oSoft);
+                           uv.y * 18.0 + uParallaxY * 3.0), oSoft);
       col = mix(col, uLight, smoothstep(0.56, 0.84, c3) * hi * 0.20);
     }
 
@@ -1079,7 +1094,7 @@ export const SKY_FRAG = /* glsl */ `
        * enough vertical structure to break the silhouette up without shearing
        * the interior.
        */
-      vec2 tp = vec2(uv.x * uAspect * 1.7 + uTime * 0.007 + uParallax * 0.55, hb * 4.0);
+      vec2 tp = vec2(uv.x * uAspect * 1.7 + uTime * 0.007 + uParallax * 0.55, hb * 4.0 + uParallaxY * 1.4);
 
       // Domain warp first, so the tower SILHOUETTES are irregular. Warping only
       // the interior gives you lumpy texture inside a smooth blob.
@@ -1171,11 +1186,23 @@ export const SKY_FRAG = /* glsl */ `
        * grows without bound toward the horizon, which is exactly what
        * compresses the noise there and makes the deck recede.
        */
-      float dist = 0.24 / below;
+      /**
+       * ── The scroll dolly ──
+       *
+       * The plane height used to be the literal 0.24, which meant scrolling
+       * "descended toward the deck" only by moving the horizon line — the
+       * cloud texture itself never grew. Lowering the plane with uScroll is a
+       * real altitude change: the same noise features get nearer, larger and
+       * faster toward the bottom of the page, which is the one depth cue a
+       * projected plane can produce that a flat fade cannot. The range is
+       * small (about a fifth of the height) because the deck must remain a
+       * backdrop at every scroll position, never an approaching surface.
+       */
+      float dist = mix(0.24, 0.19, uScroll) / below;
       vec2 p = vec2((uv.x - 0.5) * uAspect * dist, dist);
 
       // Drift, plus a slow inward pull so the deck is never static.
-      p += vec2(uTime * 0.035 + uParallax * 0.8, -uTime * 0.055 + uScroll * 1.2);
+      p += vec2(uTime * 0.035 + uParallax * 0.8, -uTime * 0.055 + uScroll * 1.2 + uParallaxY * 1.1);
 
       /**
        * One octave less in the far field. Up there perspective has already
@@ -1483,9 +1510,12 @@ export const SKY_FRAG = /* glsl */ `
        * visible, and this has to stay cheap.
        */
       if (rich) {
-      float mDist = 0.10 / below;
+      // Same dolly as the deck, and proportionally deeper: the mist is the
+      // NEARER plane, so descending sweeps it faster — which is exactly the
+      // parallax that makes the pair read as thickness rather than two sheets.
+      float mDist = mix(0.10, 0.075, uScroll) / below;
       vec2 mp = vec2((uv.x - 0.5) * uAspect * mDist, mDist);
-      mp += vec2(uTime * 0.09 + uParallax * 1.6, -uTime * 0.13 + uScroll * 1.9);
+      mp += vec2(uTime * 0.09 + uParallax * 1.6, -uTime * 0.13 + uScroll * 1.9 + uParallaxY * 2.4);
       float mist = fbm2(mp * 2.4 + vec2(3.7, 6.1), oLow);
       float mThick = max(mist - 0.52, 0.0);
       // Faded at both ends: aliases into noise toward the horizon where the
@@ -1526,7 +1556,14 @@ export const SKY_FRAG = /* glsl */ `
      * Additive and weak by design. The test is that it should be obvious the
      * air near the moon is brighter, and not obvious that anything was drawn.
      */
-    if (uMoon > 0.5) {
+    /**
+     * Moonbeams are a rich-path feature. This is the shader's most expensive
+     * late addition — a second full angular-noise pass over most of the frame,
+     * drawn after the clouds — and on the 3-octave phone path it costs more
+     * than the octave budget saves. The moon keeps its corona and bloom on
+     * phones, which is most of what the beams read as at that size anyway.
+     */
+    if (uMoon > 0.5 && rich) {
       float beamAng = atan(sunDelta.y, sunDelta.x);
       // Lower frequencies than the glare pass: columns of air are wide.
       float beam = n2(vec2(beamAng * 2.6, uTime * 0.030)) * 0.62

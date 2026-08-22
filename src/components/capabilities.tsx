@@ -22,7 +22,7 @@ export function Capabilities() {
     <section
       id="capabilities"
       aria-labelledby="capabilities-title"
-      className="cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
+      className="cine-enter cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
     >
       <p className="label">Capabilities</p>
       <h2 id="capabilities-title" className="t-h2 mt-4 text-fg">

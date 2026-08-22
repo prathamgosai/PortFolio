@@ -25,7 +25,7 @@ export function Faq() {
         const panelId = `faq-panel-${i}`;
         const btnId = `faq-btn-${i}`;
         return (
-          <li key={f.q} className="glass overflow-hidden rounded-2xl">
+          <li key={f.q} className="faq-card glass overflow-hidden rounded-2xl" data-open={isOpen}>
             <h3 className="relative z-[1]">
               <button
                 id={btnId}

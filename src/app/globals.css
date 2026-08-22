@@ -234,6 +234,19 @@
   --font-mono: var(--font-plex-mono);
 }
 
+/**
+ * Horizontal scroll is never a feature of this page — every wide element
+ * (tables, diagrams) scrolls inside its own container. `clip` rather than
+ * `hidden` because hidden would make the root a scroll container and break
+ * position: sticky descendants; clip just truncates. This is the backstop for
+ * transformed elements (entrance animations, tilted cards) whose bounding
+ * boxes momentarily project past the viewport edge — on phones, where content
+ * is full-width, even a few projected pixels become a visible side-scroll.
+ */
+html {
+  overflow-x: clip;
+}
+
 html {
   color-scheme: light;
 }
@@ -762,12 +775,150 @@ body::before {
          gone while any of it is still on screen. */
       animation-range: exit 0% exit 85%;
     }
+    /**
+     * The entrance half of the same journey. A section arrives from slightly
+     * BELOW the viewer's plane — a small perspective pitch that resolves to
+     * flat as it reaches the reading position, so by the time anyone is
+     * actually reading, the transform is `none` and the type is untouched.
+     *
+     * The pitch is 2.4 degrees against a 1200px perspective, which is under
+     * the tilt system's own documented legibility budget for resting type —
+     * and unlike the tilt it is transient by construction: the animation ends
+     * at transform none, not at a held angle.
+     *
+     * Both classes on one element is the intended pairing — view() timelines
+     * attach one animation per class, and entry and exit ranges cannot
+     * overlap, so they never fight over the transform.
+     */
+    .cine-enter {
+      animation: cine-enter linear both;
+      animation-timeline: view();
+      /* Resolved by 55% of entry, so nothing is still moving anywhere near
+         the middle of the viewport, where reading happens. */
+      animation-range: entry 0% entry 55%;
+    }
+    .cine-enter.cine-exit {
+      animation:
+        cine-enter linear both,
+        cine-exit linear both;
+      animation-timeline: view(), view();
+      animation-range: entry 0% entry 55%, exit 0% exit 85%;
+    }
+    /**
+     * ── Mobile: the pitch comes off ──
+     *
+     * perspective() + rotateX projects the section's bottom edge WIDER than
+     * its layout box — the near edge of a tilted plane magnifies. On desktop
+     * the max-w-5xl column has viewport to spare so the widened box stays
+     * inside; at 390px the section IS the viewport, and a mid-entry section
+     * measured 394-405px wide — 7px of horizontal scroll caused by a
+     * decoration. The flat keyframe keeps the rise and the fade, which at
+     * phone scale is all the pitch ever read as anyway.
+     */
+    @media (max-width: 48rem) {
+      .cine-enter {
+        animation-name: cine-enter-flat;
+      }
+      /**
+       * The exit is retuned too, not just the entrance: its keyframe carries a
+       * 6px blur, and a scroll-linked blur re-filtered across a full-width
+       * section on every frame is exactly the cost the mobile reveal budget
+       * exists to avoid ("blur is the most expensive property here" — it caps
+       * reveals at 2-3px on phones). The flat exit keeps the fade and rise.
+       */
+      .cine-exit {
+        animation-name: cine-exit-flat;
+      }
+      .cine-enter.cine-exit {
+        animation-name: cine-enter-flat, cine-exit-flat;
+      }
+    }
   }
 }
 @keyframes cine-exit {
   to {
     opacity: 0.2;
     filter: blur(6px);
+    transform: translateY(-30px);
+  }
+}
+/**
+ * ── FAQ card depth ──
+ *
+ * The accordion rows are the one set of clickable glass panels with no
+ * physical response — every other interactive surface tilts, lifts, or at
+ * minimum presses. Full .glass-hover tilt would be wrong here (the panel
+ * grows downward when it opens; a tilting anchor under a moving box reads as
+ * instability), so they get the in-plane half of the language: a lift with
+ * real shadow layers on hover, a press on click, and the OPEN panel held
+ * slightly proud of its neighbours so the page's current focus is also its
+ * highest surface.
+ *
+ * Transform/shadow are owned at rest — the cascade rule documented on .chip:
+ * a hover state a component owns, it must also own at rest, or a later-layer
+ * utility outranks it.
+ */
+.faq-card {
+  transform: translateY(0);
+  transition:
+    transform 0.3s var(--ease-out-quint),
+    box-shadow 0.3s var(--ease-out-quint);
+}
+/* (hover: hover): on touch the emulated hover STICKS after a tap, leaving a
+   closed card floating at the raised position as if it were the open one. */
+@media (hover: hover) {
+  .faq-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.3),
+      0 12px 26px -12px rgba(0, 0, 0, 0.38);
+  }
+}
+.faq-card:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+.faq-card[data-open="true"] {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 5px -2px rgba(0, 0, 0, 0.32),
+    0 16px 34px -14px rgba(0, 0, 0, 0.42);
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-card,
+  .faq-card:hover,
+  .faq-card:active,
+  .faq-card[data-open="true"] {
+    transform: none;
+    transition: none;
+  }
+}
+
+@keyframes cine-enter {
+  from {
+    opacity: 0.3;
+    transform: perspective(1200px) rotateX(2.4deg) translateY(34px) scale(0.988);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cine-enter-flat {
+  from {
+    opacity: 0.3;
+    transform: translateY(24px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cine-exit-flat {
+  to {
+    opacity: 0.2;
     transform: translateY(-30px);
   }
 }
@@ -1035,25 +1186,29 @@ body::before {
     box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.4s ease;
 }
-.glass-hover:hover {
-  /* Promote to its own layer only while interacting, not for the page lifetime. */
-  will-change: transform;
-  --ty: -4px;
-  --sc: 1.02;
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent),
-    0 24px 60px -18px color-mix(in srgb, var(--signal) 32%, transparent),
-    0 8px 24px -12px rgba(0, 0, 0, 0.18);
-}
-.glass-hover:hover::after {
-  opacity: 1;
-}
-.dark .glass-hover:hover {
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
-    0 24px 60px -18px rgba(0, 0, 0, 0.7),
-    0 0 40px -10px color-mix(in srgb, var(--signal) 22%, transparent);
+/* (hover: hover): on touch, tapping a card left the emulated hover — lift,
+   glow, will-change — stuck on it until the next tap somewhere else. */
+@media (hover: hover) {
+  .glass-hover:hover {
+    /* Promote to its own layer only while interacting, not for the page lifetime. */
+    will-change: transform;
+    --ty: -4px;
+    --sc: 1.02;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent),
+      0 24px 60px -18px color-mix(in srgb, var(--signal) 32%, transparent),
+      0 8px 24px -12px rgba(0, 0, 0, 0.18);
+  }
+  .glass-hover:hover::after {
+    opacity: 1;
+  }
+  .dark .glass-hover:hover {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+      0 24px 60px -18px rgba(0, 0, 0, 0.7),
+      0 0 40px -10px color-mix(in srgb, var(--signal) 22%, transparent);
+  }
 }
 /* Tilt is a refinement, not a requirement — never animate it under reduce. */
 @media (prefers-reduced-motion: reduce) {
@@ -1066,10 +1221,23 @@ body::before {
 
 /* Premium button surfaces — soft amber glow lift on the primary action. */
 .btn-primary {
-  box-shadow: var(--shadow-sm);
+  /**
+   * The inset pair is the tile bevel vocabulary at button scale: a light line
+   * along the top edge, a dark one along the bottom. Next to bento tiles with
+   * four-layer shadow stacks, a flat slab read as printed rather than
+   * machined — this is the smallest possible version of the same material.
+   * The button face is near-black in BOTH themes (bg-fg on light is dark
+   * too), so one pair of literals serves both.
+   */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    var(--shadow-sm);
 }
 .btn-primary:hover {
   box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
     var(--shadow-md),
     0 18px 44px -14px color-mix(in srgb, var(--signal) 45%, transparent);
 }
@@ -1174,6 +1342,22 @@ body::before {
  * behind the panels to refract on a narrow viewport anyway.
  */
 @media (max-width: 767px) {
+  /**
+   * The newer glass surfaces join the same compositing budget as .glass —
+   * they were exempt only because they were written later. .hero-orb is the
+   * worst of the set: an INFINITE float animation over a backdrop-filter
+   * means re-filtering every frame of the page's life.
+   */
+  .hero-orb,
+  .stitch-glass,
+  .stitch-hud-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .stitch-glass,
+  .stitch-hud-card {
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+  }
   .glass {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -1686,6 +1870,21 @@ font {
   );
 }
 
+/**
+ * ── Footer rim light ──
+ *
+ * The closing surface of the page was its flattest: one glass sheet with the
+ * borders stripped. A rim light along its top edge — the same cue the bento
+ * tiles carry on their ::before — makes it read as a pane the page rests on
+ * rather than a colour change. box-shadow rather than a pseudo-element
+ * because .glass already spends both of its pseudos (sheen + specular).
+ */
+.footer-depth {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 -18px 40px -28px rgba(0, 0, 0, 0.35);
+}
+
 /* Cursor-following specular highlight. Shares --gx/--gy with `.glass` so one
    pointer handler feeds both surface languages. */
 .bento-tile::after {
@@ -1998,7 +2197,11 @@ font {
 
 @media (hover: none) {
   .bento-tile,
-  .portrait-card {
+  .portrait-card,
+  /* Width gates miss tablets: an iPad is over 767px and has no hover, so the
+     tilt vars written on tap made cards snap under the finger. Capability is
+     the right question, and this is where it is asked. */
+  .glass-hover {
     transform: none;
   }
   .bento-tile::after {
@@ -2155,12 +2358,42 @@ font {
 .sysgraph__node.is-primary {
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
-.sysgraph__node:hover,
 .sysgraph__node.is-active,
 .sysgraph__node:focus-visible {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 14%, transparent);
-  transform: translateY(-2px);
+  /**
+   * The ring keeps its focus job, but the node now LIFTS like the tiles
+   * around it: a top bevel line, a tight contact shadow, and a wider ambient
+   * one, borrowed from the bento material vocabulary. These nodes are buttons
+   * sitting in sections full of machined tiles — a flat 2px hop next to that
+   * read as an omission.
+   */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 4px color-mix(in srgb, var(--signal) 14%, transparent),
+    0 2px 4px -2px rgba(0, 0, 0, 0.35),
+    0 10px 22px -10px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px);
+}
+/* The same treatment on hover — but only where hover is real. On touch the
+   emulated hover stuck to the last-tapped node, so two nodes could look
+   selected at once. .is-active and :focus-visible above stay ungated. */
+@media (hover: hover) {
+  .sysgraph__node:hover {
+    border-color: var(--accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 0 0 4px color-mix(in srgb, var(--signal) 14%, transparent),
+      0 2px 4px -2px rgba(0, 0, 0, 0.35),
+      0 10px 22px -10px rgba(0, 0, 0, 0.4);
+    transform: translateY(-3px);
+  }
+}
+
+/* Press: back down past rest, the same inversion the tiles use. */
+.sysgraph__node:active {
+  transform: translateY(-1px);
+  transition-duration: 0.1s;
 }
 .sysgraph__node-label {
   font-family: var(--font-display), sans-serif;
@@ -2199,6 +2432,31 @@ font {
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--fg-muted);
+}
+
+/**
+ * Mobile sysgraph material. Placed AFTER the base rules on purpose — a rule
+ * inside a media query has no extra specificity, so source order decides, and
+ * an override written above the base is silently dead (measured: the blur
+ * survived an earlier version of this block that sat before the bases).
+ */
+@media (max-width: 47.99rem) {
+  /**
+   * The stacked list is 8-9 full-width nodes, and the home page carries TWO
+   * graphs — that was 16-18 backdrop-filter surfaces on phones, behind an 88%
+   * tint that hides the frost anyway. Same trade .glass makes on mobile:
+   * near-opaque surface, no filter.
+   */
+  .sysgraph__node {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+  }
+  /* Reserve the tallest readout: at phone widths the detail wraps to four
+     lines, and the desktop reservation let the page jump on every tap. */
+  .sysgraph__readout {
+    min-height: 7rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2322,7 +2580,11 @@ font {
 }
 
 @media (hover: none), (prefers-reduced-motion: reduce) {
-  .cursor-dot {
+  .cursor-dot,
+  /* Belt-and-braces for the JS gate in cursor-spotlight.tsx: with no pointer
+     the spotlight has nothing to follow and just parks a full-viewport
+     composited glow in a corner. */
+  .cursor-spotlight {
     display: none;
   }
 }
@@ -2607,6 +2869,35 @@ font {
 .work-row:hover,
 .work-row:focus-within {
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+/**
+ * The lift rides on the WASH BAND, not the row. Transforming the row itself
+ * would reflow-adjacent text and drag the bottom border with it; the ::before
+ * band is already absolutely positioned past the row's box, so scaling it a
+ * touch and deepening its shadow gives the "this row is raised" read with the
+ * type itself never moving a pixel.
+ */
+.work-row::before {
+  transform: scale(1);
+  transition:
+    opacity 0.4s var(--ease-out-quint),
+    transform 0.4s var(--ease-out-quint),
+    box-shadow 0.4s var(--ease-out-quint);
+}
+@media (hover: hover) {
+  .work-row:hover::before,
+  .work-row:focus-within::before {
+    transform: scale(1.008);
+    box-shadow:
+      0 2px 5px -3px rgba(0, 0, 0, 0.25),
+      0 14px 30px -16px rgba(0, 0, 0, 0.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-row::before {
+    transform: none;
+    transition: opacity 0.4s var(--ease-out-quint);
+  }
 }
 .work-row > * {
   position: relative;

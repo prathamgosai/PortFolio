@@ -28,7 +28,7 @@ export function AboutTeaser() {
     <section
       id="about"
       aria-labelledby="about-title"
-      className="cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
+      className="cine-enter cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
     >
       <p className="label">About</p>
 

@@ -42,7 +42,9 @@ export function TechConstellation() {
 
   return (
     <div className="constellation">
-      <ul className="constellation__field" onPointerLeave={() => setActive(null)}>
+      {/* Mouse-only guards, same reason as system-graph: on touch the
+          enter/leave pair fires within the tap and defeats click's toggle. */}
+      <ul className="constellation__field" onPointerLeave={(e) => { if (e.pointerType === "mouse") setActive(null); }}>
         {items.map((item) => (
           <li key={`${item.group}-${item.name}`}>
             <button
@@ -50,8 +52,8 @@ export function TechConstellation() {
               className={`constellation__item${item.shipped ? " is-shipped" : ""}${
                 active === item.name ? " is-active" : ""
               }`}
-              onPointerEnter={() => setActive(item.name)}
-              onFocus={() => setActive(item.name)}
+              onPointerEnter={(e) => { if (e.pointerType === "mouse") setActive(item.name); }}
+              onFocus={(e) => { if (e.target.matches(":focus-visible")) setActive(item.name); }}
               onBlur={() => setActive((cur) => (cur === item.name ? null : cur))}
               onClick={() => setActive((cur) => (cur === item.name ? null : item.name))}
               aria-pressed={active === item.name}

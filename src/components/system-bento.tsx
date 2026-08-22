@@ -174,7 +174,7 @@ export function SystemBento() {
             href={CERTS_URL}
             target="_blank"
             rel="noreferrer"
-            className="depth-1 mt-6 inline-flex items-center gap-1.5 font-mono text-xs font-bold text-accent-ink hover:underline"
+            className="depth-1 -my-2.5 mt-6 inline-flex items-center gap-1.5 py-2.5 font-mono text-xs font-bold text-accent-ink hover:underline"
           >
             Verify credentials <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
           </a>

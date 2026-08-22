@@ -30,7 +30,7 @@ export function SelectedWork() {
     <section
       id="work"
       aria-labelledby="work-title"
-      className="cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
+      className="cine-enter cine-exit mx-auto max-w-5xl scroll-mt-28 px-5 py-20 sm:py-24"
     >
       <p className="label label-signal">Selected work</p>
       <h2 id="work-title" className="t-h2 mt-4 text-fg">
@@ -125,7 +125,7 @@ export function SelectedWork() {
                     href={project.repo}
                     target="_blank"
                     rel="noreferrer"
-                    className="work-row__repo relative z-[3] mt-4 inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-ink hover:underline"
+                    className="work-row__repo relative z-[3] -my-2.5 mt-4 inline-flex items-center gap-1.5 py-2.5 font-mono text-xs font-semibold text-accent-ink hover:underline"
                     data-cursor="Code"
                   >
                     View source

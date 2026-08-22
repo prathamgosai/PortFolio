@@ -37,7 +37,13 @@ export function CustomCursor() {
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const fine = window.matchMedia("(pointer: fine)");
+    /**
+     * Must mirror the CSS gate (@media (hover: none) hides the dot): a
+     * fine-pointer device without hover — some stylus setups — used to pass
+     * the JS check and hide the NATIVE cursor while CSS hid ours, leaving no
+     * cursor at all. JS and CSS now answer the same question.
+     */
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
     let attached = false;
 
     const onMove = (e: PointerEvent) => {
